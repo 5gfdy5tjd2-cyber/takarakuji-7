@@ -7,18 +7,35 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（スマホ対応・完全画面固定CSS） ---
+# --- カスタムデザイン（明るく見やすいライトテーマ ＆ 条件付き固定ヘッダーCSS） ---
 st.markdown(
     """
     <style>
+    /* 全体の背景と文字色を明るく爽やかに */
+    .stApp {
+        background-color: #f8fafc;
+        color: #1e293b;
+    }
+    
+    /* サイドバーも明るく */
+    [data-testid="stSidebar"] {
+        background-color: #f1f5f9;
+    }
+
     .stButton>button {
         width: 100%;
-        background: linear-gradient(45deg, #FF4B4B, #FF8F8F);
+        background: linear-gradient(45deg, #2563eb, #3b82f6);
         color: white;
         font-weight: bold;
-        border-radius: 10px;
-        padding: 0.6rem;
+        border-radius: 12px;
+        padding: 0.7rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        border: none;
     }
+    .stButton>button:hover {
+        background: linear-gradient(45deg, #1d4ed8, #2563eb);
+    }
+
     .lotto-number-container {
         display: flex;
         justify-content: center;
@@ -26,8 +43,8 @@ st.markdown(
         margin: 15px 0;
     }
     .lotto-ball {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        color: white;
+        background: linear-gradient(135deg, #ffffff, #f1f5f9);
+        color: #1e293b;
         font-size: 24px;
         font-weight: bold;
         width: 52px;
@@ -36,24 +53,26 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        border: 2px solid #e2e8f0;
     }
     
-    /* 📌 スマホ・PCの画面最上部に絶対固定するスタイル */
+    /* 📌 予想結果が出たときだけ最上部に固定するヘッダー */
     .absolute-fixed-header {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        background-color: #0e1117 !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(8px);
         z-index: 999999 !important;
         padding: 8px 5px !important;
-        border-bottom: 2px solid #FF4B4B !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.8) !important;
+        border-bottom: 2px solid #3b82f6 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         text-align: center;
     }
 
-    /* 前回の当選数字用のミニボール（スマホでも収まるサイズ） */
+    /* 前回の当選数字用のミニボール */
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
@@ -61,8 +80,8 @@ st.markdown(
         margin: 3px 0;
     }
     .prev-ball-fixed {
-        background: linear-gradient(135deg, #7f8c8d, #95a5a6);
-        color: white;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        color: #334155;
         font-size: 13px;
         font-weight: bold;
         width: 27px;
@@ -71,11 +90,12 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+        border: 1px solid #cbd5e1;
     }
     
-    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける */
-    .block-container {
+    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける（結果表示時用） */
+    .has-fixed-header {
         padding-top: 65px !important;
     }
     </style>
@@ -311,29 +331,39 @@ def generate_takarada_custom(
     )
 
 
-# --- 📌 【完全固定】画面最上部に常時張り付く前回の当選数字ヘッダー ---
-latest_draw = recent_24_draws[0]
-fixed_header_html = """
-<div class="absolute-fixed-header">
-    <div style="font-size: 10px; font-weight: bold; color: #a6b9cc; margin-bottom: 1px;">
-        📌 【追従中】直近（前回）の当選数字
-    </div>
-    <div class="prev-ball-container-fixed">
-"""
-for p_num in latest_draw:
-    fixed_header_html += f'<div class="prev-ball-fixed">{p_num:02d}</div>'
-fixed_header_html += """
-    </div>
-</div>
-"""
-st.markdown(fixed_header_html, unsafe_allow_html=True)
-
-
 # --- メイン画面：抽選ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
+    # 📌 ボタンが押されたとき（結果表示時）だけ、画面最上部に固定ヘッダーを表示＆上部にパディングを追加
+    st.markdown(
+        """
+        <style>
+        .block-container {
+            padding-top: 65px !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    latest_draw = recent_24_draws[0]
+    fixed_header_html = """
+    <div class="absolute-fixed-header">
+        <div style="font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 1px;">
+            📌 【追従中】直近（前回）の当選数字
+        </div>
+        <div class="prev-ball-container-fixed">
+    """
+    for p_num in latest_draw:
+        fixed_header_html += f'<div class="prev-ball-fixed">{p_num:02d}</div>'
+    fixed_header_html += """
+        </div>
+    </div>
+    """
+    st.markdown(fixed_header_html, unsafe_allow_html=True)
+
     st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
 
     success_count = 0
