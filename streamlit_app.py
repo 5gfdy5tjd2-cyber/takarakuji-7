@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（サイドバー展開時はサイドバーを最前面にするレイアウト修正） ---
+# --- カスタムデザイン（追従ヘッダーの位置をさらに下へ＆サイズ拡大） ---
 st.markdown(
     """
     <style>
@@ -19,10 +19,9 @@ st.markdown(
         font-family: 'Noto Sans JP', sans-serif;
     }
     
-    /* 🚨 サイドバー自体のz-indexとデザインを強化 */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
-        z-index: 99999999 !important; /* メニューやヘッダーよりも手前に表示 */
+        z-index: 99999999 !important;
     }
 
     .stButton>button {
@@ -31,10 +30,11 @@ st.markdown(
         color: white;
         font-weight: bold;
         border-radius: 12px;
-        padding: 0.7rem;
+        padding: 0.8rem;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         border: none;
         font-family: 'M PLUS Rounded 1c', sans-serif;
+        font-size: 1rem;
     }
     .stButton>button:hover {
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
@@ -51,14 +51,14 @@ st.markdown(
         text-align: center;
         margin-bottom: 0px;
         letter-spacing: -0.5px;
-        padding-top: 10px;
+        padding-top: 15px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
     }
 
     .premium-subtitle {
         text-align: center;
         color: #64748b;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 500;
         margin-top: 5px;
         margin-bottom: 25px;
@@ -95,37 +95,37 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 追従ヘッダー（通常時はコンテンツの上だが、サイドバーよりは下層にする） */
+    /* 📌 追従ヘッダー：位置をしっかり下げ、文字やボールサイズを大きく見やすく調整 */
     .absolute-fixed-header {
         position: fixed !important;
-        top: 48px !important;
+        top: 60px !important; /* 👈 上部のメニューボタンと絶対にかぶらない位置に下方修正 */
         left: 0 !important;
         width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.96) !important;
+        background-color: rgba(255, 255, 255, 0.98) !important;
         backdrop-filter: blur(8px);
-        z-index: 99999 !important; /* サイドバー(99999999)よりも低く設定し、サイドバーを開いたときに絶対に裏に隠れるようにする */
-        padding: 6px 15px !important;
+        z-index: 99999 !important;
+        padding: 8px 15px !important;
         border-bottom: 2px solid #3b82f6 !important;
         border-top: 1px solid #e2e8f0 !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
         text-align: center;
     }
 
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 6px;
-        margin: 2px 0;
+        gap: 8px;
+        margin: 4px 0;
     }
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
         color: #1e293b;
-        font-size: 12px;
+        font-size: 14px; /* 見やすさ重視でサイズアップ */
         font-weight: bold;
-        width: 24px;
-        height: 24px;
-        min-width: 24px;
-        min-height: 24px;
+        width: 30px;    /* 大きくして見やすく調整 */
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
         border-radius: 50% !important;
         display: flex;
         align-items: center;
@@ -376,8 +376,8 @@ if generate_btn:
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
-        <div style="font-size: 9px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
-            📌 【追従中】最新（前回 第693回）の当選数字
+        <div style="font-size: 11px; font-weight: bold; color: #475569; margin-bottom: 3px;">
+            📌 【追従中】前回（第693回）の当選数字
         </div>
         <div class="prev-ball-container-fixed">
     """
@@ -393,7 +393,7 @@ if generate_btn:
         """
         <style>
         .block-container {
-            padding-top: 55px !important;
+            padding-top: 75px !important;
         }
         </style>
         """,
@@ -448,4 +448,4 @@ if generate_btn:
                                 st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
     if success_count > 0:
-        st.success("🎉 完了しました！カスタム設定画面を開いた時は、カスタム画面が一番手前に綺麗に表示されるようになります。")
+        st.success("🎉 完了しました！上部のメニューボタンともしっかり離れ、数字や文字も大きくなって見やすくなっています。")
