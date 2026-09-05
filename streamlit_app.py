@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（詳細数字とレイアウトの微調整） ---
+# --- カスタムデザイン ---
 st.markdown(
     """
     <style>
@@ -272,11 +272,10 @@ def generate_takarada_custom(
         for a in user_axes:
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
-            golden_tag = " (黄金値該当)" if 4 <= cnt_a <= 6 else ""
-            reasons[a] = {
-                "title": "ユーザー指定固定軸",
-                "sub": f"{oddeven_a}{golden_tag} / 出現{cnt_a}回",
-            }
+            golden_tag = "（黄金値該当）" if 4 <= cnt_a <= 6 else ""
+            reasons[
+                a
+            ] = f"ユーザー指定の固定軸として選択されました（{oddeven_a}{golden_tag}・過去出現{cnt_a}回）。"
 
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
@@ -296,15 +295,13 @@ def generate_takarada_custom(
                     cnt_h = counts.get(h_num, 0)
                     oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
                     if h_num in pull_numbers:
-                        reasons[h_num] = {
-                            "title": "🔥 ホット数字",
-                            "sub": f"引っ張り・{oddeven_h} / 出現{cnt_h}回",
-                        }
+                        reasons[
+                            h_num
+                        ] = f"直近の当選数字からの引っ張り・{oddeven_h}として選出されました（過去出現{cnt_h}回）。"
                     else:
-                        reasons[h_num] = {
-                            "title": "🔥 ホット数字",
-                            "sub": f"スライド・{oddeven_h} / 出現{cnt_h}回",
-                        }
+                        reasons[
+                            h_num
+                        ] = f"直近の当選数字からのスライド・{oddeven_h}として選出されました（過去出現{cnt_h}回）。"
                     added_hot += 1
 
         while len(selected) < 7:
@@ -336,10 +333,9 @@ def generate_takarada_custom(
             zone_name = (
                 "低帯" if 1 <= cand <= 12 else ("中帯" if 13 <= cand <= 24 else "高帯")
             )
-            reasons[cand] = {
-                "title": f"📦 {zone_name}バランス枠",
-                "sub": f"出現{cnt_c}回",
-            }
+            reasons[
+                cand
+            ] = f"バランスを整えるための{zone_name}の調整枠として選ばれました（過去出現{cnt_c}回）。"
 
         if len(selected) != 7:
             continue
@@ -454,18 +450,16 @@ if generate_btn:
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？"):
                             for num in lotto_numbers:
-                                info = reasons.get(
-                                    num, {"title": "個別特性枠", "sub": ""}
+                                reason_text = reasons.get(
+                                    num, "バランス枠として選出されました。"
                                 )
-                                # 緑の数字を大きく、説明を太字、補足を細字にするHTML形式
+                                # 緑の数字を大きくし、文章全体を細字（font-weight: normal / 色は少し落ち着いたグレー）に設定
                                 detail_html = f"""
-                                <div style="margin-bottom: 8px; font-size: 14px;">
-                                    • 数字 <span style="color: #16a34a; font-size: 17px; font-weight: bold;">[ {num:02d} ]</span>： 
-                                    <strong style="color: #0f172a;">{info['title']}</strong> 
-                                    <span style="color: #64748b; font-size: 12px; font-weight: normal;">({info['sub']})</span>
+                                <div style="margin-bottom: 10px; font-size: 13px; font-weight: normal; color: #475569; line-height: 1.5;">
+                                    • 数字 <span style="color: #16a34a; font-size: 17px; font-weight: bold;">[ {num:02d} ]</span>：{reason_text}
                                 </div>
                                 """
                                 st.markdown(detail_html, unsafe_allow_html=True)
 
     if success_count > 0:
-        st.success("🎉 完了しました！詳細の数字が大きくなり、説明が太字、補足が細字ですっきりと見やすくなりました。")
+        st.success("🎉 完了しました！選ばれた理由が自然な文で説明され、すべて細字ですっきりと表示されるようになりました。")
