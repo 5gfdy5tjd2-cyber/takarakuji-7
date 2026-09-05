@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="宝田式・ロト7 プレミアム完全カスタム版", page_icon="🎯", layout="centered"
+    page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
 # --- カスタムデザイン ---
@@ -38,6 +38,27 @@ st.markdown(
         justify-content: center;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
+    /* 前回の当選数字用のミニボール */
+    .prev-ball-container {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 8px 0;
+        flex-wrap: wrap;
+    }
+    .prev-ball {
+        background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
     </style>
 """,
     unsafe_allow_html=True,
@@ -48,8 +69,32 @@ st.caption(
     "✨ すべてのパラメータを自由自在にカスタマイズ可能な次世代プレミアム版"
 )
 
-# --- サイドバー：詳細カスタマイズ項目を大幅拡張 ---
+# --- 過去データベース ---
+recent_24_draws = [
+    [6, 17, 22, 23, 25, 29, 36],
+    [3, 10, 20, 22, 23, 28, 33],
+    [2, 18, 23, 24, 32, 34, 37],
+    [5, 22, 23, 24, 25, 30, 31],
+    [4, 11, 16, 20, 21, 22, 35],
+    [1, 5, 16, 20, 21, 22, 31],
+    [10, 14, 17, 21, 25, 29, 36],
+    [11, 14, 17, 23, 28, 30, 31],
+    [7, 10, 12, 17, 33, 35, 36],
+]
+
+# --- サイドバー：最上部に「前回の当選数字」を固定表示 ---
 st.sidebar.header("⚙️ 宝田式・フルカスタム設定")
+
+latest_draw = recent_24_draws[0]
+with st.sidebar.container(border=True):
+    st.markdown("📌 **直近（前回）の当選数字**")
+    prev_balls_html = "<div class='prev-ball-container'>"
+    for p_num in latest_draw:
+        prev_balls_html += f"<div class='prev-ball'>{p_num:02d}</div>"
+    prev_balls_html += "</div>"
+    st.markdown(prev_balls_html, unsafe_allow_html=True)
+
+st.sidebar.markdown("---")
 
 num_predictions = st.sidebar.slider(
     "生成する予想の数", min_value=1, max_value=10, value=3
@@ -84,44 +129,25 @@ if exclude_input:
 st.sidebar.markdown("---")
 st.sidebar.subheader("📊 条件フィルター調整")
 
-# ホット軸の個数選択
 hot_min, hot_max = st.sidebar.slider(
     "🔥 ホット数字軸の個数範囲", min_value=0, max_value=5, value=(1, 3)
 )
 
-# ゾーン別（各帯）の許容個数
 zone_min, zone_max = st.sidebar.slider(
     "📦 各帯（低・中・高）の許容個数範囲", min_value=1, max_value=5, value=(2, 3)
 )
 
-# 合計値の範囲
 sum_min, sum_max = st.sidebar.slider(
     "📈 7個の合計値の範囲", min_value=100, max_value=200, value=(125, 145)
 )
 
-# 末尾被りの範囲
 tail_min, tail_max = st.sidebar.slider(
     "🔢 末尾被り（同尾数ペア）の許容個数", min_value=0, max_value=3, value=(0, 2)
 )
 
-# 連番の範囲
 renban_min, renban_max = st.sidebar.slider(
     "🔗 連番ペアの許容個数", min_value=0, max_value=3, value=(0, 2)
 )
-
-
-# --- 過去データベース ---
-recent_24_draws = [
-    [6, 17, 22, 23, 25, 29, 36],
-    [3, 10, 20, 22, 23, 28, 33],
-    [2, 18, 23, 24, 32, 34, 37],
-    [5, 22, 23, 24, 25, 30, 31],
-    [4, 11, 16, 20, 21, 22, 35],
-    [1, 5, 16, 20, 21, 22, 31],
-    [10, 14, 17, 21, 25, 29, 36],
-    [11, 14, 17, 23, 28, 30, 31],
-    [7, 10, 12, 17, 33, 35, 36],
-]
 
 
 # --- フルカスタム対応抽選アルゴリズム ---
@@ -178,10 +204,8 @@ def generate_takarada_custom(
             cnt_a = counts.get(a, 0)
             reasons[a] = f"🔑 **ユーザー指定軸**: ご自身で設定された固定軸です。（直近24回出現数: {cnt_a}回）"
 
-        # 1. ホット数字軸の選択（ユーザー設定範囲に基づく）
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
-            # 範囲内からランダムにターゲット数を決定
             possible_counts = [
                 c
                 for c in range(h_range[0], h_range[1] + 1)
@@ -206,7 +230,6 @@ def generate_takarada_custom(
                         reasons[h_num] = f"🔥 **ホット数字（スライド±1）**: 直近24回で {cnt_h}回出現している黄金値であり、前回当選数字「{origin:02d}」からのスライドとして選出されました。"
                     added_hot += 1
 
-        # 2. 残りの枠をゾーンバランスを意識して埋める
         while len(selected) < 7:
             low_cnt = sum(1 for n in selected if 1 <= n <= 12)
             mid_cnt = sum(1 for n in selected if 13 <= n <= 24)
@@ -216,7 +239,6 @@ def generate_takarada_custom(
             for n in valid_nums:
                 if n in selected:
                     continue
-                # ユーザーが指定した上限（z_range[1]）未満の帯を優先
                 if 1 <= n <= 12 and low_cnt < z_range[1]:
                     pool.extend([n] * 2)
                 elif 13 <= n <= 24 and mid_cnt < z_range[1]:
@@ -247,12 +269,10 @@ def generate_takarada_custom(
 
         lotto_list = sorted(list(selected))
 
-        # --- カスタム設定されたフィルターのチェック ---
         low_final = sum(1 for n in lotto_list if 1 <= n <= 12)
         mid_final = sum(1 for n in lotto_list if 13 <= n <= 24)
         high_final = sum(1 for n in lotto_list if 25 <= n <= 37)
 
-        # ゾーン配分がユーザー設定の最小〜最大に収まっているか
         if not (
             (z_range[0] <= low_final <= z_range[1])
             and (z_range[0] <= mid_final <= z_range[1])
@@ -260,14 +280,12 @@ def generate_takarada_custom(
         ):
             continue
 
-        # 末尾被りチェック
         last_digits = [n % 10 for n in lotto_list]
         digit_counts = Counter(last_digits)
         pairs_count = sum(1 for d, cnt in digit_counts.items() if cnt >= 2)
         if not (t_range[0] <= pairs_count <= t_range[1]):
             continue
 
-        # 連番チェック
         consecutive_count = 0
         for i in range(len(lotto_list) - 1):
             if lotto_list[i + 1] - lotto_list[i] == 1:
