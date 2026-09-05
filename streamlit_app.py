@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（奇偶バランス＆黄金値参照の徹底 ＆ 正円立体ボール） ---
+# --- カスタムデザイン（オシャレなグラデーションタイトル ＆ 正円立体ボール） ---
 st.markdown(
     """
     <style>
@@ -34,6 +34,30 @@ st.markdown(
     }
     .stButton>button:hover {
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
+    }
+
+    /* 🌟 オシャレなプレミアム・グラデーションタイトル */
+    .premium-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 0px;
+        letter-spacing: -0.5px;
+        padding-top: 5px;
+    }
+
+    /* ✨ サブタイトルの洗練されたデザイン */
+    .premium-subtitle {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 5px;
+        margin-bottom: 25px;
+        letter-spacing: 0.5px;
     }
 
     /* 🎯 予想パターンの数字：完全正円・立体球体デザイン（枠内におさまる最適なサイズ） */
@@ -99,19 +123,19 @@ st.markdown(
         box-shadow: inset 0 -2px 4px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.08);
         border: 1px solid #ffffff;
     }
-    
-    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける */
-    .has-fixed-header {
-        padding-top: 75px !important;
-    }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-st.title("🎯 宝田式・ロト7 フルカスタム予想")
-st.caption(
-    "✨ すべてのパラメータを自由自在にカスタマイズ可能な次世代プレミアム版"
+# --- オシャレなグラデーションタイトルの描画 ---
+st.markdown(
+    '<h1 class="premium-title">🎯 宝田式・ロト7 フルカスタム予想</h1>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<p class="premium-subtitle">✨ 黄金値データ ＆ 奇偶バランスを完全融合させた次世代予測プラットフォーム</p>',
+    unsafe_allow_html=True,
 )
 
 # --- サイドバー：詳細カスタマイズ項目 ---
