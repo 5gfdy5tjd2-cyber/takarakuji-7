@@ -171,19 +171,23 @@ if exclude_input:
         pass
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("📊 条件フィルター調整")
+st.sidebar.subheader("📊 条件フィルター調整（ミックス強化版）")
 
+# デフォルトでホットや末尾被りをしっかり混ぜやすい範囲に調整
 hot_min, hot_max = st.sidebar.slider(
-    "🔥 ホット数字軸の個数範囲", min_value=0, max_value=5, value=(1, 3)
+    "🔥 ホット・スライド・引っ張り要素の個数",
+    min_value=1,
+    max_value=5,
+    value=(2, 4),
 )
 zone_min, zone_max = st.sidebar.slider(
-    "📦 各帯（低・中・高）の許容個数範囲", min_value=1, max_value=5, value=(2, 3)
+    "📦 各帯（低・中・高）の許容個数範囲", min_value=1, max_value=5, value=(1, 4)
 )
 sum_min, sum_max = st.sidebar.slider(
-    "📈 7個の合計値の範囲", min_value=100, max_value=200, value=(125, 145)
+    "📈 7個の合計値の範囲", min_value=100, max_value=200, value=(115, 155)
 )
 tail_min, tail_max = st.sidebar.slider(
-    "🔢 末尾被り（同尾数ペア）の許容個数", min_value=0, max_value=3, value=(0, 2)
+    "🔢 末尾被り（同尾数ペア）の許容個数", min_value=1, max_value=4, value=(1, 3)
 )
 renban_min, renban_max = st.sidebar.slider(
     "🔗 連番ペアの許容個数", min_value=0, max_value=3, value=(0, 2)
@@ -196,7 +200,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="premium-subtitle">✨ 黄金値データ ＆ 奇偶バランスを完全融合させた次世代予測プラットフォーム</p>',
+    '<p class="premium-subtitle">✨ 黄金値・引っ張り・スライド・末尾被りを強力ミックスした次世代予測プラットフォーム</p>',
     unsafe_allow_html=True,
 )
 
@@ -242,6 +246,7 @@ def generate_takarada_custom(
     flat_draws = [num for draw in recent_24_draws for num in draw]
     counts = Counter(flat_draws)
 
+    # 黄金値（出現4〜6回）
     golden_values = [
         num
         for num, cnt in counts.items()
@@ -250,6 +255,7 @@ def generate_takarada_custom(
     previous_draw = recent_24_draws[0]
     pull_numbers = [n for n in previous_draw if n not in exclude_nums]
 
+    # スライド数字（前回数字の±1）
     slide_numbers = []
     for p in previous_draw:
         if p - 1 >= 1:
@@ -259,12 +265,13 @@ def generate_takarada_custom(
     slide_numbers = list(
         set([n for n in slide_numbers if n not in exclude_nums])
     )
-    hot_candidates = [
-        n for n in golden_values if n in pull_numbers or n in slide_numbers
-    ]
+
+    # 狙い目候補（引っ張り・スライド・黄金値を統合）
+    target_pool = list(set(pull_numbers + slide_numbers + golden_values))
+    target_pool = [n for n in target_pool if n not in exclude_nums]
 
     attempts = 0
-    while attempts < 8000:
+    while attempts < 10000:
         attempts += 1
         selected = set(user_axes)
         reasons = {}
@@ -273,62 +280,62 @@ def generate_takarada_custom(
         for a in user_axes:
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
-            golden_str = (
-                "黄金値（出現4〜6回）を満たし、"
-                if 4 <= cnt_a <= 6
-                else "指定された、"
-            )
             reasons[
                 a
-            ] = f"ユーザー様が固定軸として指定された数字です。{golden_str}直近24回中の出現回数は{cnt_a}回（{oddeven_a}）です。"
+            ] = f"ユーザー様が固定軸として指定された数字です。直近24回中の出現回数は{cnt_a}回（{oddeven_a}）です。"
 
-        # 2. ホット数字枠（引っ張り・スライド）
-        valid_hot = [n for n in hot_candidates if n not in selected]
-        if valid_hot and h_range[1] > 0:
+        # 2. 引っ張り・スライド・ホット数字のミックス枠を積極的に取り込む
+        available_hot_mix = [n for n in target_pool if n not in selected]
+        if available_hot_mix and h_range[1] > 0:
             possible_counts = [
                 c
                 for c in range(h_range[0], h_range[1] + 1)
-                if c <= len(valid_hot)
+                if c <= len(available_hot_mix)
             ]
-            hot_count_target = (
-                random.choice(possible_counts) if possible_counts else 0
+            mix_target_count = (
+                random.choice(possible_counts) if possible_counts else h_range[0]
             )
-            random.shuffle(valid_hot)
-            added_hot = 0
-            for h_num in valid_hot:
-                if added_hot < hot_count_target and len(selected) < 7:
+            random.shuffle(available_hot_mix)
+
+            added_mix = 0
+            for h_num in available_hot_mix:
+                if added_mix < mix_target_count and len(selected) < 7:
                     selected.add(h_num)
                     cnt_h = counts.get(h_num, 0)
                     oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
+
+                    # どの性質に強く該当するかを判定して理由を生成
                     if h_num in pull_numbers:
                         reasons[
                             h_num
-                        ] = f"直近の当選数字からそのまま選ばれた「引っ張り数字」です。出現回数{cnt_h}回の黄金値に該当し、{oddeven_h}の条件も一致しています。"
+                        ] = f"前回（第693回）からそのまま引き継がれた**「引っ張り数字」**です（出現{cnt_h}回・{oddeven_h}）。"
+                    elif h_num in slide_numbers:
+                        reasons[
+                            h_num
+                        ] = f"前回当選数字の近傍からスライドしてきた**「スライド数字」**です（出現{cnt_h}回・{oddeven_h}）。"
                     else:
                         reasons[
                             h_num
-                        ] = f"直近の当選数字の前後（±1）から選ばれた「スライド数字」です。出現回数{cnt_h}回の黄金値に該当し、{oddeven_h}の条件も一致しています。"
-                    added_hot += 1
+                        ] = f"出現回数が理想的な帯にある**「ホットな黄金値数字」**です（出現{cnt_h}回・{oddeven_h}）。"
+                    added_mix += 1
 
-        # 3. 残りの枠（黄金値・帯バランス・出現頻度を考慮した根拠）
+        # 3. 残りの枠を埋めつつ、末尾被り（同尾数）を意識的に発生させるロジック
         while len(selected) < 7:
-            low_cnt = sum(1 for n in selected if 1 <= n <= 12)
-            mid_cnt = sum(1 for n in selected if 13 <= n <= 24)
-            high_cnt = sum(1 for n in selected if 25 <= n <= 37)
+            # 現在选ばれている数字の末尾をチェック
+            current_tails = [n % 10 for n in selected]
 
             pool = []
             for n in valid_nums:
                 if n in selected:
                     continue
+                n_tail = n % 10
                 is_golden = 4 <= counts.get(n, 0) <= 6
-                weight = 3 if is_golden else 1
 
-                if 1 <= n <= 12 and low_cnt < z_range[1]:
-                    pool.extend([n] * weight)
-                elif 13 <= n <= 24 and mid_cnt < z_range[1]:
-                    pool.extend([n] * weight)
-                elif 25 <= n <= 37 and high_cnt < z_range[1]:
-                    pool.extend([n] * weight)
+                # すでに選ばれている数字と同じ末尾（同尾数）なら、末尾被りを作るために優先度を上げる
+                if n_tail in current_tails:
+                    pool.extend([n] * 4)  # 強く末尾被りを誘発
+                elif is_golden:
+                    pool.extend([n] * 2)
                 else:
                     pool.append(n)
 
@@ -340,28 +347,31 @@ def generate_takarada_custom(
             cand = random.choice(pool)
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
-            zone_name = (
-                "低帯（1〜12）"
-                if 1 <= cand <= 12
-                else (
-                    "中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）"
-                )
+            cand_tail = cand % 10
+            is_tail_match = current_tails.count(cand_tail) > 0
+
+            tail_desc = (
+                "**【末尾被り】**同じ下二桁（同尾数）のペアを形成し、"
+                if is_tail_match
+                else ""
             )
             is_golden_cand = 4 <= cnt_c <= 6
-            if is_golden_cand:
-                golden_desc = f"出現回数{cnt_c}回で理想的な「黄金値」の範囲内であり、"
-            else:
-                golden_desc = f"出現回数{cnt_c}回の実績考慮枠であり、"
+            golden_desc = (
+                f"出現回数{cnt_c}回の黄金値"
+                if is_golden_cand
+                else f"出現回数{cnt_c}回の実績枠"
+            )
 
             reasons[
                 cand
-            ] = f"{zone_name}のバランス調整枠として選出されました。{golden_desc}全体の配置バランスを最適化するために組み込まれました。"
+            ] = f"{tail_desc}{golden_desc}として全体のバランスを補正するために選出されました。"
 
         if len(selected) != 7:
             continue
 
         lotto_list = sorted(list(selected))
 
+        # 4. 各種バリデーション（フィルター）
         odd_final = sum(1 for n in lotto_list if n % 2 != 0)
         if not (2 <= odd_final <= 5):
             continue
@@ -431,8 +441,8 @@ if generate_btn:
     success_count = 0
     attempts = 0
 
-    with st.spinner("カスタム条件で厳選中..."):
-        while success_count < num_predictions and attempts < 12000:
+    with st.spinner("スライド・引っ張り・末尾被りをミックスして厳選中..."):
+        while success_count < num_predictions and attempts < 15000:
             attempts += 1
             lotto_numbers, reasons, err = generate_takarada_custom(
                 user_axis_numbers,
@@ -481,4 +491,6 @@ if generate_btn:
                                 st.markdown(detail_html, unsafe_allow_html=True)
 
     if success_count > 0:
-        st.success("🎉 完了しました！すべての数字に対して、黄金値やホット数字、帯バランスなどの具体的な選定理由が細字の文章で表示されます。")
+        st.success(
+            "🎉 完了しました！引っ張り・スライド・黄金値・末尾被りの要素が1つのパターンの中にバランスよく高密度で混ざり合っています。"
+        )
