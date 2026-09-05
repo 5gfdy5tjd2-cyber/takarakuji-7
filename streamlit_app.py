@@ -269,14 +269,20 @@ def generate_takarada_custom(
         selected = set(user_axes)
         reasons = {}
 
+        # 1. ユーザー指定の軸
         for a in user_axes:
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
-            golden_tag = "（黄金値該当）" if 4 <= cnt_a <= 6 else ""
+            golden_str = (
+                "黄金値（出現4〜6回）を満たし、"
+                if 4 <= cnt_a <= 6
+                else "指定された、"
+            )
             reasons[
                 a
-            ] = f"ユーザー指定の固定軸として選択されました（{oddeven_a}{golden_tag}・過去出現{cnt_a}回）。"
+            ] = f"ユーザー様が固定軸として指定された数字です。{golden_str}直近24回中の出現回数は{cnt_a}回（{oddeven_a}）です。"
 
+        # 2. ホット数字枠（引っ張り・スライド）
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
             possible_counts = [
@@ -297,13 +303,14 @@ def generate_takarada_custom(
                     if h_num in pull_numbers:
                         reasons[
                             h_num
-                        ] = f"直近の当選数字からの引っ張り・{oddeven_h}として選出されました（過去出現{cnt_h}回）。"
+                        ] = f"直近の当選数字からそのまま選ばれた「引っ張り数字」です。出現回数{cnt_h}回の黄金値に該当し、{oddeven_h}の条件も一致しています。"
                     else:
                         reasons[
                             h_num
-                        ] = f"直近の当選数字からのスライド・{oddeven_h}として選出されました（過去出現{cnt_h}回）。"
+                        ] = f"直近の当選数字の前後（±1）から選ばれた「スライド数字」です。出現回数{cnt_h}回の黄金値に該当し、{oddeven_h}の条件も一致しています。"
                     added_hot += 1
 
+        # 3. 残りの枠（黄金値・帯バランス・出現頻度を考慮した根拠）
         while len(selected) < 7:
             low_cnt = sum(1 for n in selected if 1 <= n <= 12)
             mid_cnt = sum(1 for n in selected if 13 <= n <= 24)
@@ -313,12 +320,16 @@ def generate_takarada_custom(
             for n in valid_nums:
                 if n in selected:
                     continue
+                # 黄金値の数字は優先的にプールに入れる
+                is_golden = 4 <= counts.get(n, 0) <= 6
+                weight = 3 if is_golden else 1
+
                 if 1 <= n <= 12 and low_cnt < z_range[1]:
-                    pool.extend([n] * 2)
+                    pool.extend([n] * weight)
                 elif 13 <= n <= 24 and mid_cnt < z_range[1]:
-                    pool.extend([n] * 2)
+                    pool.extend([n] * weight)
                 elif 25 <= n <= 37 and high_cnt < z_range[1]:
-                    pool.extend([n] * 2)
+                    pool.extend([n] * weight)
                 else:
                     pool.append(n)
 
@@ -331,11 +342,21 @@ def generate_takarada_custom(
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
             zone_name = (
-                "低帯" if 1 <= cand <= 12 else ("中帯" if 13 <= cand <= 24 else "高帯")
+                "低帯（1〜12）"
+                if 1 <= cand <= 12
+                else (
+                    "中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）"
+                )
+            )
+            is_golden_cand = 4 <= cnt_c <= 6
+            golden_desc = (
+                f"出現回数{cnt_c}回で理想的な「黄金値」の範囲内であり、"
+                if is_golden_cand
+                else f"出現回数{cnt_c回は実績考慮枠であり、"
             )
             reasons[
                 cand
-            ] = f"バランスを整えるための{zone_name}の調整枠として選ばれました（過去出現{cnt_c}回）。"
+            ] = f"{zone_name}のバランス調整枠として選出されました。{golden_desc}全体の配置バランスを最適化するために組み込まれました。"
 
         if len(selected) != 7:
             continue
@@ -451,15 +472,15 @@ if generate_btn:
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？"):
                             for num in lotto_numbers:
                                 reason_text = reasons.get(
-                                    num, "バランス枠として選出されました。"
+                                    num, "条件を満たして選出されました。"
                                 )
-                                # 緑の数字を大きくし、文章全体を細字（font-weight: normal / 色は少し落ち着いたグレー）に設定
+                                # 緑の数字は大きく、理由は細字（font-weight: normal）で表示
                                 detail_html = f"""
-                                <div style="margin-bottom: 10px; font-size: 13px; font-weight: normal; color: #475569; line-height: 1.5;">
-                                    • 数字 <span style="color: #16a34a; font-size: 17px; font-weight: bold;">[ {num:02d} ]</span>：{reason_text}
+                                <div style="margin-bottom: 12px; font-size: 13px; font-weight: normal; color: #475569; line-height: 1.6;">
+                                    • 数字 <span style="color: #16a34a; font-size: 18px; font-weight: bold;">[ {num:02d} ]</span>：{reason_text}
                                 </div>
                                 """
                                 st.markdown(detail_html, unsafe_allow_html=True)
 
     if success_count > 0:
-        st.success("🎉 完了しました！選ばれた理由が自然な文で説明され、すべて細字ですっきりと表示されるようになりました。")
+        st.success("🎉 完了しました！すべての数字に対して、黄金値やホット数字、帯バランスなどの具体的な選定理由が細字の文章で表示されます。")
