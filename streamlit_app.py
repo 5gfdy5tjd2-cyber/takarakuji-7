@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（正しいSticky追従スタイル） ---
+# --- カスタムデザイン（スマホ対応・完全画面固定CSS） ---
 st.markdown(
     """
     <style>
@@ -39,39 +39,44 @@ st.markdown(
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
     
-    /* 📌 スクロールしても画面上部に残り続けるコンテナ */
-    .sticky-box {
-        position: -webkit-sticky;
-        position: sticky;
-        top: 0rem;
-        z-index: 999;
-        background-color: #0e1117;
-        padding: 12px 10px;
-        border-radius: 8px;
-        border: 1px solid #FF4B4B;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        margin-bottom: 15px;
+    /* 📌 スマホ・PCの画面最上部に絶対固定するスタイル */
+    .absolute-fixed-header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background-color: #0e1117 !important;
+        z-index: 999999 !important;
+        padding: 8px 5px !important;
+        border-bottom: 2px solid #FF4B4B !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.8) !important;
+        text-align: center;
     }
 
-    /* 前回の当選数字用のミニボール */
-    .prev-ball-container {
+    /* 前回の当選数字用のミニボール（スマホでも収まるサイズ） */
+    .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 8px;
-        margin: 6px 0;
+        gap: 5px;
+        margin: 3px 0;
     }
-    .prev-ball {
+    .prev-ball-fixed {
         background: linear-gradient(135deg, #7f8c8d, #95a5a6);
         color: white;
-        font-size: 16px;
+        font-size: 13px;
         font-weight: bold;
-        width: 36px;
-        height: 36px;
+        width: 27px;
+        height: 27px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    }
+    
+    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける */
+    .block-container {
+        padding-top: 65px !important;
     }
     </style>
 """,
@@ -306,29 +311,30 @@ def generate_takarada_custom(
     )
 
 
+# --- 📌 【完全固定】画面最上部に常時張り付く前回の当選数字ヘッダー ---
+latest_draw = recent_24_draws[0]
+fixed_header_html = """
+<div class="absolute-fixed-header">
+    <div style="font-size: 10px; font-weight: bold; color: #a6b9cc; margin-bottom: 1px;">
+        📌 【追従中】直近（前回）の当選数字
+    </div>
+    <div class="prev-ball-container-fixed">
+"""
+for p_num in latest_draw:
+    fixed_header_html += f'<div class="prev-ball-fixed">{p_num:02d}</div>'
+fixed_header_html += """
+    </div>
+</div>
+"""
+st.markdown(fixed_header_html, unsafe_allow_html=True)
+
+
 # --- メイン画面：抽選ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
     st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
-
-    # --- 📌 スクロール追従する前回の当選数字ボックス ---
-    latest_draw = recent_24_draws[0]
-    sticky_html = """
-    <div class="sticky-box">
-        <div style="font-size: 12px; font-weight: bold; color: #a6b9cc; text-align: center; margin-bottom: 4px;">
-            📌 【スクロール追従】直近（前回）の当選数字ベース
-        </div>
-        <div class="prev-ball-container">
-    """
-    for p_num in latest_draw:
-        sticky_html += f'<div class="prev-ball">{p_num:02d}</div>'
-    sticky_html += """
-        </div>
-    </div>
-    """
-    st.markdown(sticky_html, unsafe_allow_html=True)
 
     success_count = 0
     attempts = 0
