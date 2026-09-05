@@ -140,8 +140,9 @@ st.markdown(
 # --- サイドバー：詳細カスタマイズ項目 ---
 st.sidebar.header("⚙️ 宝田式・フルカスタム設定")
 
+# 選択できる予想の数を最大20通りに拡張
 num_predictions = st.sidebar.slider(
-    "生成する予想の数", min_value=1, max_value=10, value=3
+    "生成する予想の数", min_value=1, max_value=20, value=5
 )
 
 st.sidebar.markdown("---")
@@ -171,9 +172,8 @@ if exclude_input:
         pass
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("📊 条件フィルター調整（ミックス強化版）")
+st.sidebar.subheader("📊 条件フィルター調整（合計中央値133対応）")
 
-# デフォルトでホットや末尾被りをしっかり混ぜやすい範囲に調整
 hot_min, hot_max = st.sidebar.slider(
     "🔥 ホット・スライド・引っ張り要素の個数",
     min_value=1,
@@ -183,9 +183,15 @@ hot_min, hot_max = st.sidebar.slider(
 zone_min, zone_max = st.sidebar.slider(
     "📦 各帯（低・中・高）の許容個数範囲", min_value=1, max_value=5, value=(1, 4)
 )
+
+# 合計値の中央値が133になるよう、デフォルト範囲を121〜145（中央133）に最適化
 sum_min, sum_max = st.sidebar.slider(
-    "📈 7個の合計値の範囲", min_value=100, max_value=200, value=(115, 155)
+    "📈 7個の合計値の範囲 (中央値:133)",
+    min_value=100,
+    max_value=200,
+    value=(121, 145),
 )
+
 tail_min, tail_max = st.sidebar.slider(
     "🔢 末尾被り（同尾数ペア）の許容個数", min_value=1, max_value=4, value=(1, 3)
 )
@@ -200,7 +206,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="premium-subtitle">✨ 黄金値・引っ張り・スライド・末尾被りを強力ミックスした次世代予測プラットフォーム</p>',
+    '<p class="premium-subtitle">✨ 合計中央値133・ミックス要素・末尾被りを完全網羅した次世代予測</p>',
     unsafe_allow_html=True,
 )
 
@@ -246,7 +252,6 @@ def generate_takarada_custom(
     flat_draws = [num for draw in recent_24_draws for num in draw]
     counts = Counter(flat_draws)
 
-    # 黄金値（出現4〜6回）
     golden_values = [
         num
         for num, cnt in counts.items()
@@ -255,7 +260,6 @@ def generate_takarada_custom(
     previous_draw = recent_24_draws[0]
     pull_numbers = [n for n in previous_draw if n not in exclude_nums]
 
-    # スライド数字（前回数字の±1）
     slide_numbers = []
     for p in previous_draw:
         if p - 1 >= 1:
@@ -266,17 +270,15 @@ def generate_takarada_custom(
         set([n for n in slide_numbers if n not in exclude_nums])
     )
 
-    # 狙い目候補（引っ張り・スライド・黄金値を統合）
     target_pool = list(set(pull_numbers + slide_numbers + golden_values))
     target_pool = [n for n in target_pool if n not in exclude_nums]
 
     attempts = 0
-    while attempts < 10000:
+    while attempts < 12000:
         attempts += 1
         selected = set(user_axes)
         reasons = {}
 
-        # 1. ユーザー指定の軸
         for a in user_axes:
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
@@ -284,7 +286,6 @@ def generate_takarada_custom(
                 a
             ] = f"ユーザー様が固定軸として指定された数字です。直近24回中の出現回数は{cnt_a}回（{oddeven_a}）です。"
 
-        # 2. 引っ張り・スライド・ホット数字のミックス枠を積極的に取り込む
         available_hot_mix = [n for n in target_pool if n not in selected]
         if available_hot_mix and h_range[1] > 0:
             possible_counts = [
@@ -304,7 +305,6 @@ def generate_takarada_custom(
                     cnt_h = counts.get(h_num, 0)
                     oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
 
-                    # どの性質に強く該当するかを判定して理由を生成
                     if h_num in pull_numbers:
                         reasons[
                             h_num
@@ -319,9 +319,7 @@ def generate_takarada_custom(
                         ] = f"出現回数が理想的な帯にある**「ホットな黄金値数字」**です（出現{cnt_h}回・{oddeven_h}）。"
                     added_mix += 1
 
-        # 3. 残りの枠を埋めつつ、末尾被り（同尾数）を意識的に発生させるロジック
         while len(selected) < 7:
-            # 現在选ばれている数字の末尾をチェック
             current_tails = [n % 10 for n in selected]
 
             pool = []
@@ -331,9 +329,8 @@ def generate_takarada_custom(
                 n_tail = n % 10
                 is_golden = 4 <= counts.get(n, 0) <= 6
 
-                # すでに選ばれている数字と同じ末尾（同尾数）なら、末尾被りを作るために優先度を上げる
                 if n_tail in current_tails:
-                    pool.extend([n] * 4)  # 強く末尾被りを誘発
+                    pool.extend([n] * 4)
                 elif is_golden:
                     pool.extend([n] * 2)
                 else:
@@ -371,7 +368,6 @@ def generate_takarada_custom(
 
         lotto_list = sorted(list(selected))
 
-        # 4. 各種バリデーション（フィルター）
         odd_final = sum(1 for n in lotto_list if n % 2 != 0)
         if not (2 <= odd_final <= 5):
             continue
@@ -441,8 +437,10 @@ if generate_btn:
     success_count = 0
     attempts = 0
 
-    with st.spinner("スライド・引っ張り・末尾被りをミックスして厳選中..."):
-        while success_count < num_predictions and attempts < 15000:
+    with st.spinner(
+        f"合計中央値133をターゲットに最大{num_predictions}通りを厳選中..."
+    ):
+        while success_count < num_predictions and attempts < 20000:
             attempts += 1
             lotto_numbers, reasons, err = generate_takarada_custom(
                 user_axis_numbers,
@@ -474,7 +472,20 @@ if generate_btn:
 
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.info(f"📊 **合計値**: **{total_sum}**")
+                            # 合計値が中央値133に近いことをハイライト表示
+                            diff_133 = total_sum - 133
+                            diff_str = (
+                                f" (中央値133より+{diff_133})"
+                                if diff_133 > 0
+                                else (
+                                    f" (中央値133より{diff_133})"
+                                    if diff_133 < 0
+                                    else " (黄金の中央値133達成！)"
+                                )
+                            )
+                            st.info(
+                                f"📊 **合計値**: **{total_sum}**{diff_str}"
+                            )
                         with col2:
                             st.success(f"⚖️ **奇偶バランス**: **奇数 {odd_count} / 偶数 {even_count}**")
 
@@ -492,5 +503,5 @@ if generate_btn:
 
     if success_count > 0:
         st.success(
-            "🎉 完了しました！引っ張り・スライド・黄金値・末尾被りの要素が1つのパターンの中にバランスよく高密度で混ざり合っています。"
+            f"🎉 完了しました！ご指定通り最大 **{num_predictions}通り** のパターン生成に成功し、すべてのパターンで合計値が中央値（133）周辺に収まるように最適化されています。"
         )
