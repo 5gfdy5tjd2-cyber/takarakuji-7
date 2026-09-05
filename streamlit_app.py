@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（明るく見やすいライトテーマ ＆ 条件付き固定ヘッダーCSS） ---
+# --- カスタムデザイン（ライトテーマ ＆ 美しい正円立体ボール ＆ 端までゆったり配置） ---
 st.markdown(
     """
     <style>
@@ -36,25 +36,28 @@ st.markdown(
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
     }
 
+    /* 🎯 予想パターンの数字：完全な正円＆立体的な光沢ある球体デザイン */
     .lotto-number-container {
         display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin: 15px 0;
+        justify-content: space-between; /* 端が寂しくならないよう均等にゆったり配置 */
+        align-items: center;
+        margin: 20px 5px;
     }
     .lotto-ball {
-        background: linear-gradient(135deg, #ffffff, #f1f5f9);
-        color: #1e293b;
+        background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
+        color: #0f172a;
         font-size: 24px;
         font-weight: bold;
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+        min-height: 54px;
+        border-radius: 50% !important; /* 絶対に楕円にならないよう強制 */
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-        border: 2px solid #e2e8f0;
+        box-shadow: inset 0 -4px 6px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.1);
+        border: 2px solid #ffffff;
     }
     
     /* 📌 予想結果が出たときだけ最上部に固定するヘッダー */
@@ -66,37 +69,39 @@ st.markdown(
         background-color: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(8px);
         z-index: 999999 !important;
-        padding: 8px 5px !important;
+        padding: 8px 15px !important;
         border-bottom: 2px solid #3b82f6 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         text-align: center;
     }
 
-    /* 前回の当選数字用のミニボール */
+    /* 前回の当選数字用のミニボール（サイズを少し大きく＆間隔をゆったり） */
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 5px;
-        margin: 3px 0;
+        gap: 12px;
+        margin: 5px 0;
     }
     .prev-ball-fixed {
-        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-        color: #334155;
-        font-size: 13px;
+        background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
+        color: #1e293b;
+        font-size: 15px;
         font-weight: bold;
-        width: 27px;
-        height: 27px;
-        border-radius: 50%;
+        width: 33px;
+        height: 33px;
+        min-width: 33px;
+        min-height: 33px;
+        border-radius: 50% !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 3px rgba(0,0,0,0.05);
-        border: 1px solid #cbd5e1;
+        box-shadow: inset 0 -2px 4px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.08);
+        border: 1px solid #ffffff;
     }
     
     /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける（結果表示時用） */
     .has-fixed-header {
-        padding-top: 65px !important;
+        padding-top: 75px !important;
     }
     </style>
 """,
@@ -341,7 +346,7 @@ if generate_btn:
         """
         <style>
         .block-container {
-            padding-top: 65px !important;
+            padding-top: 75px !important;
         }
         </style>
         """,
@@ -351,7 +356,7 @@ if generate_btn:
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
-        <div style="font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 1px;">
+        <div style="font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
             📌 【追従中】直近（前回）の当選数字
         </div>
         <div class="prev-ball-container-fixed">
