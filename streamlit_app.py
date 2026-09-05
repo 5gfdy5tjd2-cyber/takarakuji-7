@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="宝田式・ロト7 完全版プレミアム予想", page_icon="🎯", layout="centered"
+    page_title="宝田式・ロト7 プレミアム予想", page_icon="🎯", layout="centered"
 )
 
 # --- カスタムデザイン ---
@@ -19,17 +19,36 @@ st.markdown(
         border-radius: 10px;
         padding: 0.6rem;
     }
+    .lotto-number-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 15px 0;
+    }
+    .lotto-ball {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-st.title("🎯 宝田式・ロト7 完全版プレミアム予想")
+st.title("🎯 宝田式・ロト7 プレミアム予想")
 st.caption(
-    "✨ 黄金値ホット軸(1〜3個) × 帯バランス(各2〜3個) × 合計値制御(125〜145) × 末尾被り(0〜2個) 完全統合版"
+    "✨ 黄金値ホット軸(1〜3個) × 帯バランス(各2〜3個) × 合計値制御(125〜145) × 末尾被り(0〜2個) × 連番制限(0〜2個)"
 )
 
-# --- サイドバー（詳細設定エリア：確実にここに配置！） ---
+# --- サイドバー設定エリア ---
 st.sidebar.header("⚙️ 宝田式・詳細カスタマイズ")
 
 num_predictions = st.sidebar.slider(
@@ -66,7 +85,7 @@ if exclude_input:
         pass
 
 
-# --- 過去データベース（シミュレーション用プールの動的連動） ---
+# --- 過去データベース ---
 recent_24_draws = [
     [6, 17, 22, 23, 25, 29, 36],
     [3, 10, 20, 22, 23, 28, 33],
@@ -80,8 +99,8 @@ recent_24_draws = [
 ]
 
 
-# --- 宝田式・完全アルゴリズムによる抽選と選定理由の追跡ロジック ---
-def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
+# --- 宝田式・詳細解説つき抽選アルゴリズム ---
+def generate_takarada_lotto7_detailed(user_axes, exclude_nums):
     all_nums = list(range(1, 38))
     valid_nums = [n for n in all_nums if n not in exclude_nums]
 
@@ -89,18 +108,18 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
         if a in exclude_nums:
             return None, {}, "軸数字に除外数字が含まれています！"
 
-    # 第1段階：過去24回で4〜6回出ている数字（黄金値）を抽出
     flat_draws = [num for draw in recent_24_draws for num in draw]
     counts = Counter(flat_draws)
+    
     golden_values = [
         num
         for num, cnt in counts.items()
         if 4 <= cnt <= 6 and num not in exclude_nums
     ]
 
-    # 前回の当選数字（スライド・引っ張り用）
     previous_draw = recent_24_draws[0]
     pull_numbers = [n for n in previous_draw if n not in exclude_nums]
+    
     slide_numbers = []
     for p in previous_draw:
         if p - 1 >= 1:
@@ -111,7 +130,6 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
         set([n for n in slide_numbers if n not in exclude_nums])
     )
 
-    # ホットな数字の候補
     hot_candidates = [
         n
         for n in golden_values
@@ -119,15 +137,15 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
     ]
 
     attempts = 0
-    while attempts < 2000:
+    while attempts < 6000:
         attempts += 1
         selected = set(user_axes)
         reasons = {}
 
         for a in user_axes:
-            reasons[a] = "🔑 ユーザー指定軸"
+            cnt_a = counts.get(a, 0)
+            reasons[a] = f"🔑 **ユーザー指定軸**: ご自身で設定された強力な固定軸です。（直近24回中の出現回数: {cnt_a}回）"
 
-        # ホットな数字から 1〜3個 を軸としてピックアップ
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot:
             hot_count_target = random.choice([1, 2, 3])
@@ -136,13 +154,14 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
             for h_num in valid_hot:
                 if added_hot < hot_count_target and len(selected) < 7:
                     selected.add(h_num)
+                    cnt_h = counts.get(h_num, 0)
                     if h_num in pull_numbers:
-                        reasons[h_num] = "🔥 ホット数字 (前回引っ張り)"
+                        reasons[h_num] = f"🔥 **ホット数字（引っ張り）**: 直近24回で {cnt_h}回出現している黄金値であり、**前回抽選回にも直接含まれていた数字（同値引っ張り）**のため、強力な継続トレンドとして選出されました。"
                     else:
-                        reasons[h_num] = "🔥 ホット数字 (前回スライド±1)"
+                        origin = h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
+                        reasons[h_num] = f"🔥 **ホット数字（スライド±1）**: 直近24回で {cnt_h}回出現している黄金値であり、**前回の当選数字「{origin:02d}」からスライド（±1）**した動きを示すため選出されました。"
                     added_hot += 1
 
-        # 残りの枠を帯バランス（低・中・高）を意識して埋める
         while len(selected) < 7:
             low_cnt = sum(1 for n in selected if 1 <= n <= 12)
             mid_cnt = sum(1 for n in selected if 13 <= n <= 24)
@@ -162,23 +181,26 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
                     pool.append(n)
 
             if not pool:
+                pool = [n for n in valid_nums if n not in selected]
+            if not pool:
                 break
+
             cand = random.choice(pool)
             selected.add(cand)
+            cnt_c = counts.get(cand, 0)
 
             if 1 <= cand <= 12:
-                reasons[cand] = "📊 低帯バランス枠 (01-12)"
+                reasons[cand] = f"📊 **低帯バランス枠（01-12）**: 全体のゾーンバランスを均等に保つため選出されました。（直近24回出現数: {cnt_c}回）"
             elif 13 <= cand <= 24:
-                reasons[cand] = "📊 中帯バランス枠 (13-24)"
+                reasons[cand] = f"📊 **中帯バランス枠（13-24）**: 全体のゾーンバランスを均等に保つため選出されました。（直近24回出現数: {cnt_c}回）"
             else:
-                reasons[cand] = "📊 高帯バランス枠 (25-37)"
+                reasons[cand] = f"📊 **高帯バランス枠（25-37）**: 全体のゾーンバランスを均等に保つため選出されました。（直近24回出現数: {cnt_c}回）"
 
         if len(selected) != 7:
             continue
 
         lotto_list = sorted(list(selected))
 
-        # 1. 帯の偏りチェック（極端な偏りを防ぐ）
         low_final = sum(1 for n in lotto_list if 1 <= n <= 12)
         mid_final = sum(1 for n in lotto_list if 13 <= n <= 24)
         high_final = sum(1 for n in lotto_list if 25 <= n <= 37)
@@ -190,11 +212,17 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
         ):
             continue
 
-        # 2. 末尾被り（同尾数）のチェック（0〜2個の範囲）
         last_digits = [n % 10 for n in lotto_list]
         digit_counts = Counter(last_digits)
         pairs_count = sum(1 for d, cnt in digit_counts.items() if cnt >= 2)
         if not (0 <= pairs_count <= 2):
+            continue
+
+        consecutive_count = 0
+        for i in range(len(lotto_list) - 1):
+            if lotto_list[i + 1] - lotto_list[i] == 1:
+                consecutive_count += 1
+        if not (0 <= consecutive_count <= 2):
             continue
 
         return lotto_list, reasons, None
@@ -202,18 +230,65 @@ def generate_takarada_lotto7_perfect(user_axes, exclude_nums):
     return (
         None,
         {},
-        "条件に一致する組み合わせが見つかりませんでした。合計値の範囲や除外設定を少し広げてください。",
+        "条件に一致する組み合わせが見つかりませんでした。合計値の範囲を少し広げるか、軸・除外設定を見直してください。",
     )
 
 
-# --- 【メイン画面】一番目立つところに抽選ボタンを配置 ---
+# --- メイン画面：抽選ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・完全版プレミアム予想を生成する", type="primary")
 
 if generate_btn:
-    st.markdown("### 📊 宝田式理論・厳選シミュレーション結果")
+    st.markdown("### 📊 宝田式理論・詳細解説つき厳選結果")
 
     success_count = 0
     attempts = 0
 
-    with st.spinner("宝田式ロジックで厳選中..."):
+    with st.spinner("宝田式ロジックで全条件を厳選中..."):
+        while success_count < num_predictions and attempts < 10000:
+            attempts += 1
+            lotto_numbers, reasons, err = generate_takarada_lotto7_detailed(
+                user_axis_numbers, exclude_numbers
+            )
+
+            if err:
+                st.error(err)
+                break
+
+            if lotto_numbers:
+                total_sum = sum(lotto_numbers)
+                if sum_min <= total_sum <= sum_max:
+                    success_count += 1
+
+                    with st.container(border=True):
+                        st.markdown(f"#### 🏷️ 予想パターン #{success_count}")
+                        
+                        balls_html = "<div class='lotto-number-container'>"
+                        for n in lotto_numbers:
+                            balls_html += f"<div class='lotto-ball'>{n:02d}</div>"
+                        balls_html += "</div>"
+                        st.markdown(balls_html, unsafe_allow_html=True)
+
+                        st.info(f"📊 **7個の合計値**: **{total_sum}** （指定黄金レンジ {sum_min}〜{sum_max} 内）")
+
+                        with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？（選定根拠とロジック）"):
+                            st.markdown("宝田式理論のフィルターおよび統計データに基づき、この組み合わせが構成された詳細な理由は以下の通りです：")
+                            for num in lotto_numbers:
+                                detail_text = reasons.get(num, "通常バランス枠として選出されました。")
+                                st.markdown(f"- **数字 `[ {num:02d} ]` の根拠**: {detail_text}")
+                            
+                            st.markdown("---")
+                            st.markdown("💡 **この組み合わせのバランスチェック**: "
+                                        f"低帯({sum(1 for n in lotto_numbers if 1<=n<=12)}個) / "
+                                        f"中帯({sum(1 for n in lotto_numbers if 13<=n<=24)}個) / "
+                                        f"高帯({sum(1 for n in lotto_numbers if 25<=n<=37)}個) ｜ "
+                                        f"末尾被り・連番ともに宝田式の許容範囲（0〜2個）に綺麗に収まっています。")
+
+    if success_count < num_predictions and not err:
+        st.warning(
+            f"⚠️ 指定された合計値範囲 ({sum_min}〜{sum_max}) に一致する組み合わせが少なかったため、{success_count}件のみの表示となりました。サイドバーの合計値幅を少し広げるとスムーズに生成されます。"
+        )
+    elif success_count > 0:
+        st.success(
+            "🎉 すべての宝田式条件をクリアしたプレミアム予想が完成しました！"
+        )
