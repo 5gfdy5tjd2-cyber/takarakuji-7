@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（最新データ対応 ＆ はみ出し完全解消の美しい立体ボール配置） ---
+# --- カスタムデザイン（全数字の詳細個別根拠対応 ＆ 美しい正円立体ボール配置） ---
 st.markdown(
     """
     <style>
@@ -36,7 +36,7 @@ st.markdown(
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
     }
 
-    /* 🎯 予想パターンの数字：完全正円・立体球体デザイン（枠内におさまる最適なサイズ調整） */
+    /* 🎯 予想パターンの数字：完全正円・立体球体デザイン（枠内におさまる最適なサイズ） */
     .lotto-number-container {
         display: flex;
         justify-content: space-between;
@@ -173,7 +173,7 @@ renban_min, renban_max = st.sidebar.slider(
 
 # --- 過去データベース（最新の第693回データを反映した正確な24回分） ---
 recent_24_draws = [
-    [16, 17, 22, 23, 25, 33, 35],  # 第693回 (2026年9月4日抽せん) ※最新
+    [16, 17, 22, 23, 25, 33, 35],  # 第693回 (最新)
     [7, 9, 15, 18, 20, 28, 31],    # 第692回
     [8, 10, 20, 22, 23, 27, 37],   # 第691回
     [6, 17, 22, 23, 25, 29, 36],
@@ -200,7 +200,7 @@ recent_24_draws = [
 ]
 
 
-# --- フルカスタム対応抽選アルゴリズム ---
+# --- フルカスタム対応抽選アルゴリズム（全数字の詳細解説対応） ---
 def generate_takarada_custom(
     user_axes,
     exclude_nums,
@@ -252,7 +252,7 @@ def generate_takarada_custom(
 
         for a in user_axes:
             cnt_a = counts.get(a, 0)
-            reasons[a] = f"🔑 **ユーザー指定軸**: ご自身で設定された固定軸です。（直近24回出現数: {cnt_a}回）"
+            reasons[a] = f"🔑 **ユーザー指定固定軸**: ご自身で設定されたカスタム固定軸です。（直近24回出現数: {cnt_a}回）"
 
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
@@ -272,12 +272,13 @@ def generate_takarada_custom(
                     selected.add(h_num)
                     cnt_h = counts.get(h_num, 0)
                     if h_num in pull_numbers:
-                        reasons[h_num] = f"🔥 **ホット数字（引っ張り）**: 直近24回で {cnt_h}回出現している黄金値であり、直近（前回）抽選回の同値引っ張りとして選出されました。"
+                        reasons[h_num] = f"🔥 **ホット数字（引っ張り）**: 直近24回で {cnt_h}回出現している黄金値であり、**前回（第693回）の当選数字からそのまま「引っ張り」**された数字です。"
                     else:
                         origin = (
                             h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
                         )
-                        reasons[h_num] = f"🔥 **ホット数字（スライド±1）**: 直近24回で {cnt_h}回出現している黄金値であり、直近（前回）当選数字「{origin:02d}」からのスライドとして選出されました。"
+                        direction = "+1" if h_num > origin else "-1"
+                        reasons[h_num] = f"🔥 **ホット数字（スライド{direction}）**: 直近24回で {cnt_h}回出現している黄金値であり、**前回（第693回）の当選数字「{origin:02d}」から「{direction}」スライド**して選出されました。"
                     added_hot += 1
 
         while len(selected) < 7:
@@ -307,12 +308,13 @@ def generate_takarada_custom(
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
 
+            # ゾーン（低・中・高）のどの配分バランスとして選ばれたかを明確に説明
             if 1 <= cand <= 12:
-                reasons[cand] = f"📊 **低帯バランス枠（01-12）**: ユーザー設定のゾーン配分ルールに基づき選出されました。（直近出現: {cnt_c}回）"
+                reasons[cand] = f"📦 **低帯バランス枠（01〜12）**: 低帯エリア（現在 {low_cnt+1}個配置）の偏りを防ぎ、全体バランスを最適化するための数値として選出されました。（直近24回出現数: {cnt_c}回）"
             elif 13 <= cand <= 24:
-                reasons[cand] = f"📊 **中帯バランス枠（13-24）**: ユーザー設定のゾーン配分ルールに基づき選出されました。（直近出現: {cnt_c}回）"
+                reasons[cand] = f"📦 **中帯バランス枠（13〜24）**: 中帯エリア（現在 {mid_cnt+1}個配置）の偏りを防ぎ、全体バランスを最適化するための数値として選出されました。（直近24回出現数: {cnt_c}回）"
             else:
-                reasons[cand] = f"📊 **高帯バランス枠（25-37）**: ユーザー設定のゾーン配分ルールに基づき選出されました。（直近出現: {cnt_c}回）"
+                reasons[cand] = f"📦 **高帯バランス枠（25〜37）**: 高帯エリア（現在 {high_cnt+1}個配置）の偏りを防ぎ、全体バランスを最適化するための数値として選出されました。（直近24回出現数: {cnt_c}回）"
 
         if len(selected) != 7:
             continue
@@ -423,9 +425,9 @@ if generate_btn:
                         st.info(f"📊 **7個の合計値**: **{total_sum}** （指定レンジ {sum_min}〜{sum_max} 内）")
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？（選定根拠）"):
-                            st.markdown("カスタム設定されたフィルターおよび最新データベースに基づく選定根拠は以下の通りです：")
+                            st.markdown("すべての数字について、選出されたロジックと個別根拠は以下の通りです：")
                             for num in lotto_numbers:
-                                detail_text = reasons.get(num, "通常バランス枠として選出されました。")
+                                detail_text = reasons.get(num, "バランス最適化枠として選出されました。")
                                 st.markdown(f"- **数字 `[ {num:02d} ]` の根拠**: {detail_text}")
 
                             st.markdown("---")
