@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（左右のボタンと絶対に被らない追従ヘッダー対策） ---
+# --- カスタムデザイン（追従ヘッダーの位置を下げて上のボタンと被らないように修正） ---
 st.markdown(
     """
     <style>
@@ -21,12 +21,6 @@ st.markdown(
     
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
-    }
-
-    /* Streamlitのヘッダー・メニューボタン類を最前面に固定 */
-    [data-testid="stHeader"] {
-        z-index: 99999999 !important;
-        background-color: transparent !important;
     }
 
     .stButton>button {
@@ -99,17 +93,18 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 追従ヘッダー：上下のメニューボタン（左上・右上）と絶対に被らないよう位置と余白を完璧に調整 */
+    /* 📌 追従ヘッダー：位置を少し下に下げて、上のボタンエリアと完全に分離する */
     .absolute-fixed-header {
         position: fixed !important;
-        top: 0 !important;
+        top: 48px !important; /* 👈 ここを少し下げて上部のボタンとかぶらないように調整 */
         left: 0 !important;
         width: 100% !important;
         background-color: rgba(255, 255, 255, 0.96) !important;
         backdrop-filter: blur(8px);
-        z-index: 999998 !important; /* Streamlitのメニューボタン(99999999)より下、コンテンツより上 */
-        padding: 8px 65px 8px 65px !important; /* 左右に十分な余白を空けてボタンの邪魔をしない */
+        z-index: 999998 !important;
+        padding: 6px 15px !important;
         border-bottom: 2px solid #3b82f6 !important;
+        border-top: 1px solid #e2e8f0 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         text-align: center;
     }
@@ -118,7 +113,7 @@ st.markdown(
         display: flex;
         justify-content: center;
         gap: 6px;
-        margin: 4px 0;
+        margin: 2px 0;
     }
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
@@ -375,7 +370,7 @@ st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
-    # 追従ヘッダー（左右のボタンと絶対に被らないよう中央に寄せてマージン確保）
+    # 追従ヘッダー表示
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
@@ -396,7 +391,7 @@ if generate_btn:
         """
         <style>
         .block-container {
-            padding-top: 65px !important;
+            padding-top: 55px !important;
         }
         </style>
         """,
@@ -451,4 +446,4 @@ if generate_btn:
                                 st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
     if success_count > 0:
-        st.success("🎉 完了しました！左右のボタンやメニューも完全に独立して快適に押せるようになっています。")
+        st.success("🎉 完了しました！上部のネイティブボタン類と追従ヘッダーが綺麗なすき間で分離され、どちらも快適に押せるようになります。")
