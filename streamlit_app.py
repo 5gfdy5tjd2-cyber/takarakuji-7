@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（画面上部に完全に固定する fixed スタイル） ---
+# --- カスタムデザイン（正しいSticky追従スタイル） ---
 st.markdown(
     """
     <style>
@@ -39,45 +39,39 @@ st.markdown(
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
     
-    /* 📌 画面最上部に完全に固定（追従）するスタイル */
-    .fixed-top-banner {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background-color: rgba(14, 17, 23, 0.95);
-        backdrop-filter: blur(5px);
-        z-index: 99999;
-        padding: 8px 0;
-        border-bottom: 2px solid #FF4B4B;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        text-align: center;
+    /* 📌 スクロールしても画面上部に残り続けるコンテナ */
+    .sticky-box {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0rem;
+        z-index: 999;
+        background-color: #0e1117;
+        padding: 12px 10px;
+        border-radius: 8px;
+        border: 1px solid #FF4B4B;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        margin-bottom: 15px;
     }
 
     /* 前回の当選数字用のミニボール */
     .prev-ball-container {
         display: flex;
         justify-content: center;
-        gap: 6px;
-        margin: 4px 0;
+        gap: 8px;
+        margin: 6px 0;
     }
     .prev-ball {
         background: linear-gradient(135deg, #7f8c8d, #95a5a6);
         color: white;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: bold;
-        width: 30px;
-        height: 30px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-    }
-    
-    /* 固定バナーに内容が隠れないようにメイン上部に余白を確保 */
-    .block-container {
-        padding-top: 70px !important;
     }
     </style>
 """,
@@ -312,30 +306,29 @@ def generate_takarada_custom(
     )
 
 
-# --- 📌 常に画面最上部に追従固定される「前回の当選数字」バナー ---
-latest_draw = recent_24_draws[0]
-fixed_banner_html = """
-<div class="fixed-top-banner">
-    <div style="font-size: 11px; font-weight: bold; color: #a6b9cc; margin-bottom: 2px;">
-        📌 【追従固定】直近（前回）の当選数字
-    </div>
-    <div class="prev-ball-container">
-"""
-for p_num in latest_draw:
-    fixed_banner_html += f'<div class="prev-ball">{p_num:02d}</div>'
-fixed_banner_html += """
-    </div>
-</div>
-"""
-st.markdown(fixed_banner_html, unsafe_allow_html=True)
-
-
 # --- メイン画面：抽選ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
     st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
+
+    # --- 📌 スクロール追従する前回の当選数字ボックス ---
+    latest_draw = recent_24_draws[0]
+    sticky_html = """
+    <div class="sticky-box">
+        <div style="font-size: 12px; font-weight: bold; color: #a6b9cc; text-align: center; margin-bottom: 4px;">
+            📌 【スクロール追従】直近（前回）の当選数字ベース
+        </div>
+        <div class="prev-ball-container">
+    """
+    for p_num in latest_draw:
+        sticky_html += f'<div class="prev-ball">{p_num:02d}</div>'
+    sticky_html += """
+        </div>
+    </div>
+    """
+    st.markdown(sticky_html, unsafe_allow_html=True)
 
     success_count = 0
     attempts = 0
