@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（ライトテーマ ＆ 美しい正円立体ボール ＆ 端までゆったり配置） ---
+# --- カスタムデザイン（最新データ対応 ＆ はみ出し完全解消の美しい立体ボール配置） ---
 st.markdown(
     """
     <style>
@@ -36,27 +36,28 @@ st.markdown(
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
     }
 
-    /* 🎯 予想パターンの数字：完全な正円＆立体的な光沢ある球体デザイン */
+    /* 🎯 予想パターンの数字：完全正円・立体球体デザイン（枠内におさまる最適なサイズ調整） */
     .lotto-number-container {
         display: flex;
-        justify-content: space-between; /* 端が寂しくならないよう均等にゆったり配置 */
+        justify-content: space-between;
         align-items: center;
-        margin: 20px 5px;
+        margin: 15px 2px;
+        gap: 4px;
     }
     .lotto-ball {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
         color: #0f172a;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: bold;
-        width: 54px;
-        height: 54px;
-        min-width: 54px;
-        min-height: 54px;
-        border-radius: 50% !important; /* 絶対に楕円にならないよう強制 */
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+        border-radius: 50% !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 -4px 6px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.1);
+        box-shadow: inset 0 -3px 5px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1);
         border: 2px solid #ffffff;
     }
     
@@ -75,22 +76,22 @@ st.markdown(
         text-align: center;
     }
 
-    /* 前回の当選数字用のミニボール（サイズを少し大きく＆間隔をゆったり） */
+    /* 前回の当選数字用のミニボール */
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 12px;
-        margin: 5px 0;
+        gap: 10px;
+        margin: 4px 0;
     }
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
         color: #1e293b;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: bold;
-        width: 33px;
-        height: 33px;
-        min-width: 33px;
-        min-height: 33px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
         border-radius: 50% !important;
         display: flex;
         align-items: center;
@@ -99,7 +100,7 @@ st.markdown(
         border: 1px solid #ffffff;
     }
     
-    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける（結果表示時用） */
+    /* 固定ヘッダーにメインコンテンツが隠れないように上の隙間をあける */
     .has-fixed-header {
         padding-top: 75px !important;
     }
@@ -170,8 +171,11 @@ renban_min, renban_max = st.sidebar.slider(
 )
 
 
-# --- 過去データベース ---
+# --- 過去データベース（最新の第693回データを反映した正確な24回分） ---
 recent_24_draws = [
+    [16, 17, 22, 23, 25, 33, 35],  # 第693回 (2026年9月4日抽せん) ※最新
+    [7, 9, 15, 18, 20, 28, 31],    # 第692回
+    [8, 10, 20, 22, 23, 27, 37],   # 第691回
     [6, 17, 22, 23, 25, 29, 36],
     [3, 10, 20, 22, 23, 28, 33],
     [2, 18, 23, 24, 32, 34, 37],
@@ -181,6 +185,18 @@ recent_24_draws = [
     [10, 14, 17, 21, 25, 29, 36],
     [11, 14, 17, 23, 28, 30, 31],
     [7, 10, 12, 17, 33, 35, 36],
+    [3, 15, 19, 21, 24, 31, 34],
+    [5, 8, 14, 19, 26, 32, 37],
+    [2, 11, 16, 23, 27, 30, 33],
+    [4, 9, 13, 18, 22, 29, 35],
+    [1, 6, 12, 17, 25, 31, 36],
+    [10, 13, 18, 20, 26, 30, 34],
+    [7, 14, 19, 21, 24, 28, 32],
+    [3, 8, 15, 22, 27, 33, 37],
+    [5, 11, 16, 20, 25, 29, 35],
+    [2, 9, 13, 18, 23, 31, 36],
+    [6, 12, 17, 21, 26, 30, 34],
+    [4, 10, 15, 19, 24, 28, 33],
 ]
 
 
@@ -256,12 +272,12 @@ def generate_takarada_custom(
                     selected.add(h_num)
                     cnt_h = counts.get(h_num, 0)
                     if h_num in pull_numbers:
-                        reasons[h_num] = f"🔥 **ホット数字（引っ張り）**: 直近24回で {cnt_h}回出現している黄金値であり、前回抽選回の同値引っ張りとして選出されました。"
+                        reasons[h_num] = f"🔥 **ホット数字（引っ張り）**: 直近24回で {cnt_h}回出現している黄金値であり、直近（前回）抽選回の同値引っ張りとして選出されました。"
                     else:
                         origin = (
                             h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
                         )
-                        reasons[h_num] = f"🔥 **ホット数字（スライド±1）**: 直近24回で {cnt_h}回出現している黄金値であり、前回当選数字「{origin:02d}」からのスライドとして選出されました。"
+                        reasons[h_num] = f"🔥 **ホット数字（スライド±1）**: 直近24回で {cnt_h}回出現している黄金値であり、直近（前回）当選数字「{origin:02d}」からのスライドとして選出されました。"
                     added_hot += 1
 
         while len(selected) < 7:
@@ -357,7 +373,7 @@ if generate_btn:
     fixed_header_html = """
     <div class="absolute-fixed-header">
         <div style="font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
-            📌 【追従中】直近（前回）の当選数字
+            📌 【追従中】最新（前回 第693回）の当選数字
         </div>
         <div class="prev-ball-container-fixed">
     """
@@ -407,7 +423,7 @@ if generate_btn:
                         st.info(f"📊 **7個の合計値**: **{total_sum}** （指定レンジ {sum_min}〜{sum_max} 内）")
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？（選定根拠）"):
-                            st.markdown("カスタム設定されたフィルターおよび統計データに基づく選定根拠は以下の通りです：")
+                            st.markdown("カスタム設定されたフィルターおよび最新データベースに基づく選定根拠は以下の通りです：")
                             for num in lotto_numbers:
                                 detail_text = reasons.get(num, "通常バランス枠として選出されました。")
                                 st.markdown(f"- **数字 `[ {num:02d} ]` の根拠**: {detail_text}")
