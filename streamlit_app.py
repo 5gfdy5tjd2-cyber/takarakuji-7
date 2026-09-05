@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン ---
+# --- カスタムデザイン（前回の当選数字を画面上部に追従固定するCSSを追加） ---
 st.markdown(
     """
     <style>
@@ -38,20 +38,32 @@ st.markdown(
         justify-content: center;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
+    
+    /* 📌 前回の当選数字を画面上部に追従固定するスタイル */
+    .sticky-header-container {
+        position: sticky;
+        top: 45px; /* Streamlitのヘッダーの高さに合わせて調整 */
+        z-index: 999;
+        background-color: var(--background-color, #0e1117);
+        padding: 10px 0;
+        border-bottom: 2px solid #FF4B4B;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
     /* 前回の当選数字用のミニボール */
     .prev-ball-container {
         display: flex;
         justify-content: center;
         gap: 8px;
-        margin: 10px 0;
+        margin: 6px 0;
     }
     .prev-ball {
         background: linear-gradient(135deg, #7f8c8d, #95a5a6);
         color: white;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: bold;
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -298,16 +310,22 @@ generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成す�
 if generate_btn:
     st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
 
-    # --- ご指定の位置（シミュレーション結果のすぐ下）に前回の当選数字を配置 ---
+    # --- 📌 下にスクロールしても画面上部に残り続ける「追従固定」の当選数字エリア ---
     latest_draw = recent_24_draws[0]
-    with st.container(border=True):
-        st.markdown("📌 **【基準データ】直近（前回）の当選数字**")
-        prev_balls_html = "<div class='prev-ball-container'>"
-        for p_num in latest_draw:
-            prev_balls_html += f"<div class='prev-ball'>{p_num:02d}</div>"
-        prev_balls_html += "</div>"
-        st.markdown(prev_balls_html, unsafe_allow_html=True)
-        st.caption("※この前回の数字（ベース）から引っ張りやスライドが計算されています。")
+    sticky_html = f"""
+    <div class="sticky-header-container">
+        <div style="font-size: 13px; font-weight: bold; color: #a6b9cc; text-align: center; margin-bottom: 2px;">
+            📌 【スクロール追従】直近（前回）の当選数字ベース
+        </div>
+        <div class="prev-ball-container">
+    """
+    for p_num in latest_draw:
+        sticky_html += f'<div class="prev-ball">{p_num:02d}</div>'
+    sticky_html += """
+        </div>
+    </div>
+    """
+    st.markdown(sticky_html, unsafe_allow_html=True)
 
     success_count = 0
     attempts = 0
