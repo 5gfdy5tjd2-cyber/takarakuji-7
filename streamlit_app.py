@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（全数字の完全個別特性・出現回数根拠 ＆ 正円立体ボール） ---
+# --- カスタムデザイン（奇偶バランス＆黄金値参照の徹底 ＆ 正円立体ボール） ---
 st.markdown(
     """
     <style>
@@ -200,7 +200,7 @@ recent_24_draws = [
 ]
 
 
-# --- フルカスタム対応抽選アルゴリズム（完全個別特性・出現回数ベースの根拠） ---
+# --- フルカスタム対応抽選アルゴリズム（黄金値基準の奇偶バランス対応） ---
 def generate_takarada_custom(
     user_axes,
     exclude_nums,
@@ -252,7 +252,9 @@ def generate_takarada_custom(
 
         for a in user_axes:
             cnt_a = counts.get(a, 0)
-            reasons[a] = f"🔑 **ユーザー指定固定軸**: ご自身で指定されたカスタム軸数字です。（直近24回出現数: {cnt_a}回）"
+            oddeven_a = "奇数" if a % 2 != 0 else "偶数"
+            golden_tag = " [黄金値該当]" if 4 <= cnt_a <= 6 else ""
+            reasons[a] = f"🔑 **ユーザー指定固定軸 ({oddeven_a}){golden_tag}**: ご自身で指定されたカスタム軸数字です。（直近24回出現数: {cnt_a}回）"
 
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
@@ -271,14 +273,15 @@ def generate_takarada_custom(
                 if added_hot < hot_count_target and len(selected) < 7:
                     selected.add(h_num)
                     cnt_h = counts.get(h_num, 0)
+                    oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
                     if h_num in pull_numbers:
-                        reasons[h_num] = f"🔥 **ホット数字（引っ張り・出現{cnt_h}回）**: 直近24回で {cnt_h}回顔を出している好調値であり、**前回（第693回）からそのまま「引っ張り」**された強力な連動数字です。"
+                        reasons[h_num] = f"🔥 **ホット数字（引っ張り・{oddeven_h}・出現{cnt_h}回）**: 黄金値基準を満たし、前回（第693回）からそのまま「引っ張り」された強力な連動数字です。"
                     else:
                         origin = (
                             h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
                         )
                         direction = "+1" if h_num > origin else "-1"
-                        reasons[h_num] = f"🔥 **ホット数字（スライド{direction}・出現{cnt_h}回）**: 直近24回で {cnt_h}回出現している好調値であり、**前回第693回の当選数字「{origin:02d}」から「{direction}」スライド**して選出されました。"
+                        reasons[h_num] = f"🔥 **ホット数字（スライド{direction}・{oddeven_h}・出現{cnt_h}回）**: 黄金値基準を満たし、前回第693回の当選数字「{origin:02d}」からスライドして選出されました。"
                     added_hot += 1
 
         while len(selected) < 7:
@@ -308,17 +311,19 @@ def generate_takarada_custom(
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
 
-            # 各数字の出現回数に応じた完全個別コメントの生成
             zone_name = "低帯（01〜12）" if 1 <= cand <= 12 else ("中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）")
+            oddeven_type = "奇数" if cand % 2 != 0 else "偶数"
+            is_golden = 4 <= cnt_c <= 6
+            golden_str = "【🌟黄金値帯】" if is_golden else "【通常出現帯】"
             
             if cnt_c >= 5:
-                profile_desc = f"直近24回で【{cnt_c}回】出現している**高頻度・主力エース数字**です。勢いが衰えにくく軸としても信頼性が高いため採用されました。"
+                profile_desc = f"直近24回で【{cnt_c}回】出現の**高頻度・主力{oddeven_type}**です。{golden_str} 勢いが安定しており軸を支える優秀な数値として採用されました。"
             elif 3 <= cnt_c <= 4:
-                profile_desc = f"直近24回で【{cnt_c}回】出現している**中頻度・安定バランス数字**です。出方に偏りがなく、堅実な組合せの土台を作るために選出されました。"
+                profile_desc = f"直近24回で【{cnt_c}回】出現の**中頻度・安定バランス{oddeven_type}**です。{golden_str} 偏りのない堅実な組合せの土台を作るために選出されました。"
             elif cnt_c == 2:
-                profile_desc = f"直近24回で【2回】出現している**潜伏・低頻度狙い目数字**です。そろそろ出現間隔のタイミングが巡ってくる狙い目の波としてピックアップされました。"
+                profile_desc = f"直近24回で【2回】出現の**潜伏・低頻度狙い目{oddeven_type}**です。そろそろ出現タイミングが巡ってくる波としてピックアップされました。"
             else:
-                profile_desc = f"直近24回で【{cnt_c}回】（またはレア出現）の**大穴・反発期待数字**です。全体の組合せに波乱と爆発力をもたらす隠し味として選出されました。"
+                profile_desc = f"直近24回で【{cnt_c}回】の**大穴・反発期待{oddeven_type}**です。全体の組合せに爆発力をもたらす隠し味として選出されました。"
 
             reasons[cand] = f"📦 **{zone_name}バランス枠**: {profile_desc}"
 
@@ -326,6 +331,11 @@ def generate_takarada_custom(
             continue
 
         lotto_list = sorted(list(selected))
+
+        # 偶数・奇数のバランスフィルター（極端な偏り 7:0 や 0:7 を自動排除）
+        odd_final = sum(1 for n in lotto_list if n % 2 != 0)
+        if not (2 <= odd_final <= 5):  # 奇数が2〜5個（偶数が2〜5個）の黄金バランス
+            continue
 
         low_final = sum(1 for n in lotto_list if 1 <= n <= 12)
         mid_final = sum(1 for n in lotto_list if 13 <= n <= 24)
@@ -419,6 +429,10 @@ if generate_btn:
                 if sum_min <= total_sum <= sum_max:
                     success_count += 1
 
+                    # 奇数・偶数の個数を集計
+                    odd_count = sum(1 for n in lotto_numbers if n % 2 != 0)
+                    even_count = sum(1 for n in lotto_numbers if n % 2 == 0)
+
                     with st.container(border=True):
                         st.markdown(f"#### 🏷️ 予想パターン #{success_count}")
 
@@ -428,16 +442,20 @@ if generate_btn:
                         balls_html += "</div>"
                         st.markdown(balls_html, unsafe_allow_html=True)
 
-                        st.info(f"📊 **7個の合計値**: **{total_sum}** （指定レンジ {sum_min}〜{sum_max} 内）")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.info(f"📊 **合計値**: **{total_sum}** （指定 {sum_min}〜{sum_max}）")
+                        with col2:
+                            st.success(f"⚖️ **奇偶バランス**: **奇数 {odd_count}個 / 偶数 {even_count}個**")
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？（個別選定根拠）"):
-                            st.markdown("各数字の出現データと選出特性の個別解説は以下の通りです：")
+                            st.markdown("各数字の出現データと奇偶バランス特性の個別解説は以下の通りです：")
                             for num in lotto_numbers:
                                 detail_text = reasons.get(num, "個別特性枠として選出されました。")
                                 st.markdown(f"- **数字 `[ {num:02d} ]` の根拠**: {detail_text}")
 
                             st.markdown("---")
-                            st.markdown("💡 **カスタムバランス確認**: "
+                            st.markdown("💡 **カスタムゾーン内訳**: "
                                         f"低帯({sum(1 for n in lotto_numbers if 1<=n<=12)}個) / "
                                         f"中帯({sum(1 for n in lotto_numbers if 13<=n<=24)}個) / "
                                         f"高帯({sum(1 for n in lotto_numbers if 25<=n<=37)}個)")
@@ -448,5 +466,5 @@ if generate_btn:
         )
     elif success_count > 0:
         st.success(
-            "🎉 すべてのカスタム条件を満たした予想の生成が完了しました！"
+            "🎉 黄金値ベースの奇偶バランスとすべてのカスタム条件を満たした予想の生成が完了しました！"
         )
