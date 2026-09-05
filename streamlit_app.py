@@ -7,32 +7,34 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（迫力のタイトル ＆ 丸みのある見出し ＆ スマホ用サイドバー常時表示ボタン対応） ---
+# --- カスタムデザイン（スマホのメニューボタンが絶対に隠れない最前面固定対策） ---
 st.markdown(
     """
     <style>
-    /* 1. フォントのインポート */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,900;1,900&family=M+PLUS+Rounded+1c:wght@700;800&family=Noto+Sans+JP:wght@500;700&display=swap');
 
-    /* 全体の背景と文字色を明るく爽やかに */
     .stApp {
         background-color: #f8fafc;
         color: #1e293b;
         font-family: 'Noto Sans JP', sans-serif;
     }
     
-    /* サイドバーも明るく */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
     }
 
-    /* 📱 スマホなどの狭い画面でも左上のメニューボタン（サイドバーを開くボタン）が確実に表示されるようにする対策 */
-    [data-testid="stSidebarNav"] {
-        display: block;
+    /* 🚨 最重要：Streamlitのデフォルトメニュー・ヘッダーを常に最前面（一番手前）に強制固定し、他のどの要素よりも絶対上に配置する */
+    [data-testid="stHeader"] {
+        z-index: 99999999 !important;
+        background-color: transparent !important;
     }
-    button[kind="header"] {
-        visibility: visible !important;
-        display: flex !important;
+    
+    /* 左上のメニューボタン（三本線・矢印）を確実に見せて押しやすくする */
+    [data-testid="collapsedControl"] {
+        z-index: 100000000 !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
     }
 
     .stButton>button {
@@ -62,11 +64,10 @@ st.markdown(
         text-align: center;
         margin-bottom: 0px;
         letter-spacing: -0.5px;
-        padding-top: 5px;
+        padding-top: 15px; /* メニューボタンと被らないように少し余白を確保 */
         text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
     }
 
-    /* ✨ サブタイトルの洗練されたデザイン */
     .premium-subtitle {
         text-align: center;
         color: #64748b;
@@ -77,14 +78,12 @@ st.markdown(
         letter-spacing: 0.5px;
     }
 
-    /* 🍩 見出し全般（h3, h4, サイドバー見出し）：丸みを帯びたポップで優しいフォント */
     h3, h4, .stSidebar h2, .stSidebar h3 {
         font-family: 'M PLUS Rounded 1c', sans-serif !important;
         font-weight: 800 !important;
         letter-spacing: -0.2px;
     }
 
-    /* 🎯 予想パターンの数字：完全正円・立体球体デザイン */
     .lotto-number-container {
         display: flex;
         justify-content: space-between;
@@ -109,7 +108,7 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 予想結果が出たときだけ最上部に固定するヘッダー */
+    /* 📌 予想結果表示中の追従ヘッダー（メニューボタンよりは下層、コンテンツよりは上層に調整） */
     .absolute-fixed-header {
         position: fixed !important;
         top: 0 !important;
@@ -118,13 +117,12 @@ st.markdown(
         background-color: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(8px);
         z-index: 999999 !important;
-        padding: 8px 15px !important;
+        padding: 8px 15px 8px 50px !important; /* 左側にメニューボタン用のスペースを空ける */
         border-bottom: 2px solid #3b82f6 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         text-align: center;
     }
 
-    /* 前回の当選数字用のミニボール */
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
@@ -152,8 +150,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# --- サイドバー：詳細カスタマイズ項目（常に変更可能） ---
+# --- サイドバー：詳細カスタマイズ項目 ---
 st.sidebar.header("⚙️ 宝田式・フルカスタム設定")
 
 num_predictions = st.sidebar.slider(
@@ -192,25 +189,21 @@ st.sidebar.subheader("📊 条件フィルター調整")
 hot_min, hot_max = st.sidebar.slider(
     "🔥 ホット数字軸の個数範囲", min_value=0, max_value=5, value=(1, 3)
 )
-
 zone_min, zone_max = st.sidebar.slider(
     "📦 各帯（低・中・高）の許容個数範囲", min_value=1, max_value=5, value=(2, 3)
 )
-
 sum_min, sum_max = st.sidebar.slider(
     "📈 7個の合計値の範囲", min_value=100, max_value=200, value=(125, 145)
 )
-
 tail_min, tail_max = st.sidebar.slider(
     "🔢 末尾被り（同尾数ペア）の許容個数", min_value=0, max_value=3, value=(0, 2)
 )
-
 renban_min, renban_max = st.sidebar.slider(
     "🔗 連番ペアの許容個数", min_value=0, max_value=3, value=(0, 2)
 )
 
 
-# --- メイン画面のタイトル描画 ---
+# --- メイン画面のタイトル ---
 st.markdown(
     '<h1 class="premium-title">🎯 宝田式・ロト7 フルカスタム予想</h1>',
     unsafe_allow_html=True,
@@ -220,12 +213,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
-# --- 過去データベース（最新の第693回データを反映した正確な24回分） ---
+# --- 過去データベース（最新 第693回反映） ---
 recent_24_draws = [
     [16, 17, 22, 23, 25, 33, 35],  # 第693回 (最新)
-    [7, 9, 15, 18, 20, 28, 31],    # 第692回
-    [8, 10, 20, 22, 23, 27, 37],   # 第691回
+    [7, 9, 15, 18, 20, 28, 31],
+    [8, 10, 20, 22, 23, 27, 37],
     [6, 17, 22, 23, 25, 29, 36],
     [3, 10, 20, 22, 23, 28, 33],
     [2, 18, 23, 24, 32, 34, 37],
@@ -250,7 +242,6 @@ recent_24_draws = [
 ]
 
 
-# --- フルカスタム対応抽選アルゴリズム ---
 def generate_takarada_custom(
     user_axes, exclude_nums, h_range, z_range, t_range, r_range
 ):
@@ -269,7 +260,6 @@ def generate_takarada_custom(
         for num, cnt in counts.items()
         if 4 <= cnt <= 6 and num not in exclude_nums
     ]
-
     previous_draw = recent_24_draws[0]
     pull_numbers = [n for n in previous_draw if n not in exclude_nums]
 
@@ -282,7 +272,6 @@ def generate_takarada_custom(
     slide_numbers = list(
         set([n for n in slide_numbers if n not in exclude_nums])
     )
-
     hot_candidates = [
         n for n in golden_values if n in pull_numbers or n in slide_numbers
     ]
@@ -297,7 +286,7 @@ def generate_takarada_custom(
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
             golden_tag = " [黄金値該当]" if 4 <= cnt_a <= 6 else ""
-            reasons[a] = f"🔑 **ユーザー指定固定軸 ({oddeven_a}){golden_tag}**: ご自身で指定されたカスタム軸数字です。（直近24回出現数: {cnt_a}回）"
+            reasons[a] = f"🔑 **ユーザー指定固定軸 ({oddeven_a}){golden_tag}**"
 
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
@@ -309,7 +298,6 @@ def generate_takarada_custom(
             hot_count_target = (
                 random.choice(possible_counts) if possible_counts else 0
             )
-
             random.shuffle(valid_hot)
             added_hot = 0
             for h_num in valid_hot:
@@ -318,13 +306,12 @@ def generate_takarada_custom(
                     cnt_h = counts.get(h_num, 0)
                     oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
                     if h_num in pull_numbers:
-                        reasons[h_num] = f"🔥 **ホット数字（引っ張り・{oddeven_h}・出現{cnt_h}回）**: 黄金値基準を満たし、前回（第693回）からそのまま「引っ張り」された強力な連動数字です。"
+                        reasons[h_num] = f"🔥 **ホット数字（引っ張り・{oddeven_h}）**"
                     else:
                         origin = (
                             h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
                         )
-                        direction = "+1" if h_num > origin else "-1"
-                        reasons[h_num] = f"🔥 **ホット数字（スライド{direction}・{oddeven_h}・出現{cnt_h}回）**: 黄金値基準を満たし、前回第693回の当選数字「{origin:02d}」からスライドして選出されました。"
+                        reasons[h_num] = f"🔥 **ホット数字（スライド・{oddeven_h}）**"
                     added_hot += 1
 
         while len(selected) < 7:
@@ -353,26 +340,10 @@ def generate_takarada_custom(
             cand = random.choice(pool)
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
-
             zone_name = (
-                "低帯（01〜12）"
-                if 1 <= cand <= 12
-                else ("中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）")
+                "低帯" if 1 <= cand <= 12 else ("中帯" if 13 <= cand <= 24 else "高帯")
             )
-            oddeven_type = "奇数" if cand % 2 != 0 else "偶数"
-            is_golden = 4 <= cnt_c <= 6
-            golden_str = "【🌟黄金値帯】" if is_golden else "【通常出現帯】"
-
-            if cnt_c >= 5:
-                profile_desc = f"直近24回で【{cnt_c}回】出現の**高頻度・主力{oddeven_type}**です。{golden_str} 勢いが安定しており軸を支える優秀な数値として採用されました。"
-            elif 3 <= cnt_c <= 4:
-                profile_desc = f"直近24回で【{cnt_c}回】出現の**中頻度・安定バランス{oddeven_type}**です。{golden_str} 偏りのない堅実な組合せの土台を作るために選出されました。"
-            elif cnt_c == 2:
-                profile_desc = f"直近24回で【2回】出現の**潜伏・低頻度狙い目{oddeven_type}**です。そろそろ出現タイミングが巡ってくる波としてピックアップされました。"
-            else:
-                profile_desc = f"直近24回で【{cnt_c}回】の**大穴・反発期待{oddeven_type}**です。全体の組合せに爆発力をもたらす隠し味として選出されました。"
-
-            reasons[cand] = f"📦 **{zone_name}バランス枠**: {profile_desc}"
+            reasons[cand] = f"📦 **{zone_name}バランス枠** (出現{cnt_c}回)"
 
         if len(selected) != 7:
             continue
@@ -386,7 +357,6 @@ def generate_takarada_custom(
         low_final = sum(1 for n in lotto_list if 1 <= n <= 12)
         mid_final = sum(1 for n in lotto_list if 13 <= n <= 24)
         high_final = sum(1 for n in lotto_list if 25 <= n <= 37)
-
         if not (
             (z_range[0] <= low_final <= z_range[1])
             and (z_range[0] <= mid_final <= z_range[1])
@@ -409,20 +379,15 @@ def generate_takarada_custom(
 
         return lotto_list, reasons, None
 
-    return (
-        None,
-        {},
-        "条件に一致する組み合わせが見つかりませんでした。サイドバーの設定値を少し広げ直してください。",
-    )
+    return None, {}, "条件に一致する組み合わせが見つかりませんでした。"
 
 
 # --- メイン画面：生成ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
-# 生成ボタンが押されたら結果を計算して表示（同時にサイドバーの設定もいつでもいじれる状態を維持）
 if generate_btn:
-    # 画面上部に固定ヘッダーを表示（スマホでも見やすいミニボール）
+    # 追従ヘッダー（左側にメニューボタン避けるマージン確保）
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
@@ -439,7 +404,6 @@ if generate_btn:
     """
     st.markdown(fixed_header_html, unsafe_allow_html=True)
 
-    # 画面上部の固定ヘッダーに隠れないように余白調整用CSS
     st.markdown(
         """
         <style>
@@ -476,13 +440,11 @@ if generate_btn:
                 total_sum = sum(lotto_numbers)
                 if sum_min <= total_sum <= sum_max:
                     success_count += 1
-
                     odd_count = sum(1 for n in lotto_numbers if n % 2 != 0)
                     even_count = sum(1 for n in lotto_numbers if n % 2 == 0)
 
                     with st.container(border=True):
                         st.markdown(f"<h4>🏷️ 予想パターン #{success_count}</h4>", unsafe_allow_html=True)
-
                         balls_html = "<div class='lotto-number-container'>"
                         for n in lotto_numbers:
                             balls_html += f"<div class='lotto-ball'>{n:02d}</div>"
@@ -496,22 +458,9 @@ if generate_btn:
                             st.success(f"⚖️ **奇偶バランス**: **奇数 {odd_count} / 偶数 {even_count}**")
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？"):
-                            st.markdown("各数字の個別選定根拠：")
                             for num in lotto_numbers:
-                                detail_text = reasons.get(num, "個別特性枠として選出されました。")
+                                detail_text = reasons.get(num, "個別特性枠")
                                 st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
-                            st.markdown("---")
-                            st.markdown(
-                                "💡 **ゾーン内訳**: "
-                                f"低帯({sum(1 for n in lotto_numbers if 1<=n<=12)}個) / "
-                                f"中帯({sum(1 for n in lotto_numbers if 13<=n<=24)}個) / "
-                                f"高帯({sum(1 for n in lotto_numbers if 25<=n<=37)}個)"
-                            )
-
-    if success_count < num_predictions and not err:
-        st.warning(
-            f"⚠️ 条件が厳しいため {success_count}件のみの表示となりました。サイドバーの設定を少し緩めるとたくさん生成されます。"
-        )
-    elif success_count > 0:
-        st.success("🎉 すべてのカスタム条件を満たした予想の生成が完了しました！いつでもサイドバーから設定を変更し再生成できます。")
+    if success_count > 0:
+        st.success("🎉 生成が完了しました！左上のメニューボタンは常に最前面に固定されているため、いつでも開いて設定を変更できます。")
