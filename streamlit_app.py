@@ -42,17 +42,16 @@ st.markdown(
     .prev-ball-container {
         display: flex;
         justify-content: center;
-        gap: 6px;
-        margin: 8px 0;
-        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0;
     }
     .prev-ball {
         background: linear-gradient(135deg, #7f8c8d, #95a5a6);
         color: white;
-        font-size: 14px;
+        font-size: 18px;
         font-weight: bold;
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -69,32 +68,8 @@ st.caption(
     "✨ すべてのパラメータを自由自在にカスタマイズ可能な次世代プレミアム版"
 )
 
-# --- 過去データベース ---
-recent_24_draws = [
-    [6, 17, 22, 23, 25, 29, 36],
-    [3, 10, 20, 22, 23, 28, 33],
-    [2, 18, 23, 24, 32, 34, 37],
-    [5, 22, 23, 24, 25, 30, 31],
-    [4, 11, 16, 20, 21, 22, 35],
-    [1, 5, 16, 20, 21, 22, 31],
-    [10, 14, 17, 21, 25, 29, 36],
-    [11, 14, 17, 23, 28, 30, 31],
-    [7, 10, 12, 17, 33, 35, 36],
-]
-
-# --- サイドバー：最上部に「前回の当選数字」を固定表示 ---
+# --- サイドバー：詳細カスタマイズ項目 ---
 st.sidebar.header("⚙️ 宝田式・フルカスタム設定")
-
-latest_draw = recent_24_draws[0]
-with st.sidebar.container(border=True):
-    st.markdown("📌 **直近（前回）の当選数字**")
-    prev_balls_html = "<div class='prev-ball-container'>"
-    for p_num in latest_draw:
-        prev_balls_html += f"<div class='prev-ball'>{p_num:02d}</div>"
-    prev_balls_html += "</div>"
-    st.markdown(prev_balls_html, unsafe_allow_html=True)
-
-st.sidebar.markdown("---")
 
 num_predictions = st.sidebar.slider(
     "生成する予想の数", min_value=1, max_value=10, value=3
@@ -148,6 +123,20 @@ tail_min, tail_max = st.sidebar.slider(
 renban_min, renban_max = st.sidebar.slider(
     "🔗 連番ペアの許容個数", min_value=0, max_value=3, value=(0, 2)
 )
+
+
+# --- 過去データベース ---
+recent_24_draws = [
+    [6, 17, 22, 23, 25, 29, 36],
+    [3, 10, 20, 22, 23, 28, 33],
+    [2, 18, 23, 24, 32, 34, 37],
+    [5, 22, 23, 24, 25, 30, 31],
+    [4, 11, 16, 20, 21, 22, 35],
+    [1, 5, 16, 20, 21, 22, 31],
+    [10, 14, 17, 21, 25, 29, 36],
+    [11, 14, 17, 23, 28, 30, 31],
+    [7, 10, 12, 17, 33, 35, 36],
+]
 
 
 # --- フルカスタム対応抽選アルゴリズム ---
@@ -308,6 +297,17 @@ generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成す�
 
 if generate_btn:
     st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
+
+    # --- ご指定の位置（シミュレーション結果のすぐ下）に前回の当選数字を配置 ---
+    latest_draw = recent_24_draws[0]
+    with st.container(border=True):
+        st.markdown("📌 **【基準データ】直近（前回）の当選数字**")
+        prev_balls_html = "<div class='prev-ball-container'>"
+        for p_num in latest_draw:
+            prev_balls_html += f"<div class='prev-ball'>{p_num:02d}</div>"
+        prev_balls_html += "</div>"
+        st.markdown(prev_balls_html, unsafe_allow_html=True)
+        st.caption("※この前回の数字（ベース）から引っ張りやスライドが計算されています。")
 
     success_count = 0
     attempts = 0
