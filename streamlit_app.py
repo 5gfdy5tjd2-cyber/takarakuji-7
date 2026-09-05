@@ -7,11 +7,11 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（迫力のタイトル ＆ 丸みのある見出し ＆ 正円立体ボール） ---
+# --- カスタムデザイン（迫力のタイトル ＆ 丸みのある見出し ＆ スマホ用サイドバー常時表示ボタン対応） ---
 st.markdown(
     """
     <style>
-    /* 1. フォントのインポート（迫力用 Montserrat & 丸み用 M PLUS Rounded 1c） */
+    /* 1. フォントのインポート */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,900;1,900&family=M+PLUS+Rounded+1c:wght@700;800&family=Noto+Sans+JP:wght@500;700&display=swap');
 
     /* 全体の背景と文字色を明るく爽やかに */
@@ -24,6 +24,15 @@ st.markdown(
     /* サイドバーも明るく */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
+    }
+
+    /* 📱 スマホなどの狭い画面でも左上のメニューボタン（サイドバーを開くボタン）が確実に表示されるようにする対策 */
+    [data-testid="stSidebarNav"] {
+        display: block;
+    }
+    button[kind="header"] {
+        visibility: visible !important;
+        display: flex !important;
     }
 
     .stButton>button {
@@ -44,7 +53,7 @@ st.markdown(
     /* 🔥 タイトル：圧倒的な迫力と重厚感のあるフォント */
     .premium-title {
         font-family: 'Montserrat', sans-serif !important;
-        font-size: 2.3rem;
+        font-size: 2.1rem;
         font-weight: 900;
         font-style: italic;
         background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 50%, #db2777 100%);
@@ -61,7 +70,7 @@ st.markdown(
     .premium-subtitle {
         text-align: center;
         color: #64748b;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         font-weight: 500;
         margin-top: 5px;
         margin-bottom: 25px;
@@ -86,12 +95,12 @@ st.markdown(
     .lotto-ball {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
         color: #0f172a;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-        min-height: 42px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
         border-radius: 50% !important;
         display: flex;
         align-items: center;
@@ -119,18 +128,18 @@ st.markdown(
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
         margin: 4px 0;
     }
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
         color: #1e293b;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: bold;
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
-        min-height: 30px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        min-height: 26px;
         border-radius: 50% !important;
         display: flex;
         align-items: center;
@@ -143,17 +152,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- 迫力のあるタイトルの描画 ---
-st.markdown(
-    '<h1 class="premium-title">🎯 宝田式・ロト7 フルカスタム予想</h1>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '<p class="premium-subtitle">✨ 黄金値データ ＆ 奇偶バランスを完全融合させた次世代予測プラットフォーム</p>',
-    unsafe_allow_html=True,
-)
 
-# --- サイドバー：詳細カスタマイズ項目 ---
+# --- サイドバー：詳細カスタマイズ項目（常に変更可能） ---
 st.sidebar.header("⚙️ 宝田式・フルカスタム設定")
 
 num_predictions = st.sidebar.slider(
@@ -210,6 +210,17 @@ renban_min, renban_max = st.sidebar.slider(
 )
 
 
+# --- メイン画面のタイトル描画 ---
+st.markdown(
+    '<h1 class="premium-title">🎯 宝田式・ロト7 フルカスタム予想</h1>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<p class="premium-subtitle">✨ 黄金値データ ＆ 奇偶バランスを完全融合させた次世代予測プラットフォーム</p>',
+    unsafe_allow_html=True,
+)
+
+
 # --- 過去データベース（最新の第693回データを反映した正確な24回分） ---
 recent_24_draws = [
     [16, 17, 22, 23, 25, 33, 35],  # 第693回 (最新)
@@ -239,14 +250,9 @@ recent_24_draws = [
 ]
 
 
-# --- フルカスタム対応抽選アルゴリズム（黄金値基準の奇偶バランス対応） ---
+# --- フルカスタム対応抽選アルゴリズム ---
 def generate_takarada_custom(
-    user_axes,
-    exclude_nums,
-    h_range,
-    z_range,
-    t_range,
-    r_range,
+    user_axes, exclude_nums, h_range, z_range, t_range, r_range
 ):
     all_nums = list(range(1, 38))
     valid_nums = [n for n in all_nums if n not in exclude_nums]
@@ -278,9 +284,7 @@ def generate_takarada_custom(
     )
 
     hot_candidates = [
-        n
-        for n in golden_values
-        if n in pull_numbers or n in slide_numbers
+        n for n in golden_values if n in pull_numbers or n in slide_numbers
     ]
 
     attempts = 0
@@ -350,11 +354,15 @@ def generate_takarada_custom(
             selected.add(cand)
             cnt_c = counts.get(cand, 0)
 
-            zone_name = "低帯（01〜12）" if 1 <= cand <= 12 else ("中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）")
+            zone_name = (
+                "低帯（01〜12）"
+                if 1 <= cand <= 12
+                else ("中帯（13〜24）" if 13 <= cand <= 24 else "高帯（25〜37）")
+            )
             oddeven_type = "奇数" if cand % 2 != 0 else "偶数"
             is_golden = 4 <= cnt_c <= 6
             golden_str = "【🌟黄金値帯】" if is_golden else "【通常出現帯】"
-            
+
             if cnt_c >= 5:
                 profile_desc = f"直近24回で【{cnt_c}回】出現の**高頻度・主力{oddeven_type}**です。{golden_str} 勢いが安定しており軸を支える優秀な数値として採用されました。"
             elif 3 <= cnt_c <= 4:
@@ -371,9 +379,8 @@ def generate_takarada_custom(
 
         lotto_list = sorted(list(selected))
 
-        # 偶数・奇数のバランスフィルター（極端な偏り 7:0 や 0:7 を自動排除）
         odd_final = sum(1 for n in lotto_list if n % 2 != 0)
-        if not (2 <= odd_final <= 5):  # 奇数が2〜5個（偶数が2〜5個）の黄金バランス
+        if not (2 <= odd_final <= 5):
             continue
 
         low_final = sum(1 for n in lotto_list if 1 <= n <= 12)
@@ -405,31 +412,21 @@ def generate_takarada_custom(
     return (
         None,
         {},
-        "条件に一致する組み合わせが見つかりませんでした。サイドバーの設定値（帯の許容範囲や合計値など）を少し広げ直してください。",
+        "条件に一致する組み合わせが見つかりませんでした。サイドバーの設定値を少し広げ直してください。",
     )
 
 
-# --- メイン画面：抽選ボタン ---
+# --- メイン画面：生成ボタン ---
 st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
+# 生成ボタンが押されたら結果を計算して表示（同時にサイドバーの設定もいつでもいじれる状態を維持）
 if generate_btn:
-    # 📌 ボタンが押されたとき（結果表示時）だけ、画面最上部に固定ヘッダーを表示＆上部にパディングを追加
-    st.markdown(
-        """
-        <style>
-        .block-container {
-            padding-top: 75px !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    # 画面上部に固定ヘッダーを表示（スマホでも見やすいミニボール）
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
-        <div style="font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
+        <div style="font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
             📌 【追従中】最新（前回 第693回）の当選数字
         </div>
         <div class="prev-ball-container-fixed">
@@ -442,7 +439,19 @@ if generate_btn:
     """
     st.markdown(fixed_header_html, unsafe_allow_html=True)
 
-    st.markdown("### 📊 フルカスタム・厳選シミュレーション結果")
+    # 画面上部の固定ヘッダーに隠れないように余白調整用CSS
+    st.markdown(
+        """
+        <style>
+        .block-container {
+            padding-top: 65px !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<h3>📊 フルカスタム・厳選シミュレーション結果</h3>", unsafe_allow_html=True)
 
     success_count = 0
     attempts = 0
@@ -468,12 +477,11 @@ if generate_btn:
                 if sum_min <= total_sum <= sum_max:
                     success_count += 1
 
-                    # 奇数・偶数の個数を集計
                     odd_count = sum(1 for n in lotto_numbers if n % 2 != 0)
                     even_count = sum(1 for n in lotto_numbers if n % 2 == 0)
 
                     with st.container(border=True):
-                        st.markdown(f"#### 🏷️ 予想パターン #{success_count}")
+                        st.markdown(f"<h4>🏷️ 予想パターン #{success_count}</h4>", unsafe_allow_html=True)
 
                         balls_html = "<div class='lotto-number-container'>"
                         for n in lotto_numbers:
@@ -483,27 +491,27 @@ if generate_btn:
 
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.info(f"📊 **合計値**: **{total_sum}** （指定 {sum_min}〜{sum_max}）")
+                            st.info(f"📊 **合計値**: **{total_sum}**")
                         with col2:
-                            st.success(f"⚖️ **奇偶バランス**: **奇数 {odd_count}個 / 偶数 {even_count}個**")
+                            st.success(f"⚖️ **奇偶バランス**: **奇数 {odd_count} / 偶数 {even_count}**")
 
-                        with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？（個別選定根拠）"):
-                            st.markdown("各数字の出現データと奇偶バランス特性の個別解説は以下の通りです：")
+                        with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？"):
+                            st.markdown("各数字の個別選定根拠：")
                             for num in lotto_numbers:
                                 detail_text = reasons.get(num, "個別特性枠として選出されました。")
-                                st.markdown(f"- **数字 `[ {num:02d} ]` の根拠**: {detail_text}")
+                                st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
                             st.markdown("---")
-                            st.markdown("💡 **カスタムゾーン内訳**: "
-                                        f"低帯({sum(1 for n in lotto_numbers if 1<=n<=12)}個) / "
-                                        f"中帯({sum(1 for n in lotto_numbers if 13<=n<=24)}個) / "
-                                        f"高帯({sum(1 for n in lotto_numbers if 25<=n<=37)}個)")
+                            st.markdown(
+                                "💡 **ゾーン内訳**: "
+                                f"低帯({sum(1 for n in lotto_numbers if 1<=n<=12)}個) / "
+                                f"中帯({sum(1 for n in lotto_numbers if 13<=n<=24)}個) / "
+                                f"高帯({sum(1 for n in lotto_numbers if 25<=n<=37)}個)"
+                            )
 
     if success_count < num_predictions and not err:
         st.warning(
-            f"⚠️ 指定されたカスタム条件（合計値 {sum_min}〜{sum_max} や帯・末尾・連番の制限）が厳しいため、{success_count}件のみの表示となりました。サイドバーの数値を少し緩めるとたくさん生成されます。"
+            f"⚠️ 条件が厳しいため {success_count}件のみの表示となりました。サイドバーの設定を少し緩めるとたくさん生成されます。"
         )
     elif success_count > 0:
-        st.success(
-            "🎉 黄金値ベースの奇偶バランスとすべてのカスタム条件を満たした予想の生成が完了しました！"
-        )
+        st.success("🎉 すべてのカスタム条件を満たした予想の生成が完了しました！いつでもサイドバーから設定を変更し再生成できます。")
