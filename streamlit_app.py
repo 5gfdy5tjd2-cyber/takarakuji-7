@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（追従ヘッダーの位置を下げて上のボタンと被らないように修正） ---
+# --- カスタムデザイン（サイドバー展開時はサイドバーを最前面にするレイアウト修正） ---
 st.markdown(
     """
     <style>
@@ -19,8 +19,10 @@ st.markdown(
         font-family: 'Noto Sans JP', sans-serif;
     }
     
+    /* 🚨 サイドバー自体のz-indexとデザインを強化 */
     [data-testid="stSidebar"] {
         background-color: #f1f5f9;
+        z-index: 99999999 !important; /* メニューやヘッダーよりも手前に表示 */
     }
 
     .stButton>button {
@@ -93,15 +95,15 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 追従ヘッダー：位置を少し下に下げて、上のボタンエリアと完全に分離する */
+    /* 📌 追従ヘッダー（通常時はコンテンツの上だが、サイドバーよりは下層にする） */
     .absolute-fixed-header {
         position: fixed !important;
-        top: 48px !important; /* 👈 ここを少し下げて上部のボタンとかぶらないように調整 */
+        top: 48px !important;
         left: 0 !important;
         width: 100% !important;
         background-color: rgba(255, 255, 255, 0.96) !important;
         backdrop-filter: blur(8px);
-        z-index: 999998 !important;
+        z-index: 99999 !important; /* サイドバー(99999999)よりも低く設定し、サイドバーを開いたときに絶対に裏に隠れるようにする */
         padding: 6px 15px !important;
         border-bottom: 2px solid #3b82f6 !important;
         border-top: 1px solid #e2e8f0 !important;
@@ -446,4 +448,4 @@ if generate_btn:
                                 st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
     if success_count > 0:
-        st.success("🎉 完了しました！上部のネイティブボタン類と追従ヘッダーが綺麗なすき間で分離され、どちらも快適に押せるようになります。")
+        st.success("🎉 完了しました！カスタム設定画面を開いた時は、カスタム画面が一番手前に綺麗に表示されるようになります。")
