@@ -320,7 +320,6 @@ def generate_takarada_custom(
             for n in valid_nums:
                 if n in selected:
                     continue
-                # 黄金値の数字は優先的にプールに入れる
                 is_golden = 4 <= counts.get(n, 0) <= 6
                 weight = 3 if is_golden else 1
 
@@ -349,11 +348,11 @@ def generate_takarada_custom(
                 )
             )
             is_golden_cand = 4 <= cnt_c <= 6
-            golden_desc = (
-                f"出現回数{cnt_c}回で理想的な「黄金値」の範囲内であり、"
-                if is_golden_cand
-                else f"出現回数{cnt_c回は実績考慮枠であり、"
-            )
+            if is_golden_cand:
+                golden_desc = f"出現回数{cnt_c}回で理想的な「黄金値」の範囲内であり、"
+            else:
+                golden_desc = f"出現回数{cnt_c}回の実績考慮枠であり、"
+
             reasons[
                 cand
             ] = f"{zone_name}のバランス調整枠として選出されました。{golden_desc}全体の配置バランスを最適化するために組み込まれました。"
@@ -474,7 +473,6 @@ if generate_btn:
                                 reason_text = reasons.get(
                                     num, "条件を満たして選出されました。"
                                 )
-                                # 緑の数字は大きく、理由は細字（font-weight: normal）で表示
                                 detail_html = f"""
                                 <div style="margin-bottom: 12px; font-size: 13px; font-weight: normal; color: #475569; line-height: 1.6;">
                                     • 数字 <span style="color: #16a34a; font-size: 18px; font-weight: bold;">[ {num:02d} ]</span>：{reason_text}
