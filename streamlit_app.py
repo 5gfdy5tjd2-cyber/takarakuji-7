@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（スマホのメニューボタンが絶対に隠れない最前面固定対策） ---
+# --- カスタムデザイン（左右のボタンと絶対に被らない追従ヘッダー対策） ---
 st.markdown(
     """
     <style>
@@ -23,18 +23,10 @@ st.markdown(
         background-color: #f1f5f9;
     }
 
-    /* 🚨 最重要：Streamlitのデフォルトメニュー・ヘッダーを常に最前面（一番手前）に強制固定し、他のどの要素よりも絶対上に配置する */
+    /* Streamlitのヘッダー・メニューボタン類を最前面に固定 */
     [data-testid="stHeader"] {
         z-index: 99999999 !important;
         background-color: transparent !important;
-    }
-    
-    /* 左上のメニューボタン（三本線・矢印）を確実に見せて押しやすくする */
-    [data-testid="collapsedControl"] {
-        z-index: 100000000 !important;
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
     }
 
     .stButton>button {
@@ -52,7 +44,6 @@ st.markdown(
         background: linear-gradient(45deg, #1d4ed8, #2563eb);
     }
 
-    /* 🔥 タイトル：圧倒的な迫力と重厚感のあるフォント */
     .premium-title {
         font-family: 'Montserrat', sans-serif !important;
         font-size: 2.1rem;
@@ -64,7 +55,7 @@ st.markdown(
         text-align: center;
         margin-bottom: 0px;
         letter-spacing: -0.5px;
-        padding-top: 15px; /* メニューボタンと被らないように少し余白を確保 */
+        padding-top: 10px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
     }
 
@@ -108,16 +99,16 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 予想結果表示中の追従ヘッダー（メニューボタンよりは下層、コンテンツよりは上層に調整） */
+    /* 📌 追従ヘッダー：上下のメニューボタン（左上・右上）と絶対に被らないよう位置と余白を完璧に調整 */
     .absolute-fixed-header {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;
+        background-color: rgba(255, 255, 255, 0.96) !important;
         backdrop-filter: blur(8px);
-        z-index: 999999 !important;
-        padding: 8px 15px 8px 50px !important; /* 左側にメニューボタン用のスペースを空ける */
+        z-index: 999998 !important; /* Streamlitのメニューボタン(99999999)より下、コンテンツより上 */
+        padding: 8px 65px 8px 65px !important; /* 左右に十分な余白を空けてボタンの邪魔をしない */
         border-bottom: 2px solid #3b82f6 !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         text-align: center;
@@ -126,18 +117,18 @@ st.markdown(
     .prev-ball-container-fixed {
         display: flex;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         margin: 4px 0;
     }
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
         color: #1e293b;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
-        min-height: 26px;
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        min-height: 24px;
         border-radius: 50% !important;
         display: flex;
         align-items: center;
@@ -308,9 +299,6 @@ def generate_takarada_custom(
                     if h_num in pull_numbers:
                         reasons[h_num] = f"🔥 **ホット数字（引っ張り・{oddeven_h}）**"
                     else:
-                        origin = (
-                            h_num - 1 if (h_num - 1 in previous_draw) else h_num + 1
-                        )
                         reasons[h_num] = f"🔥 **ホット数字（スライド・{oddeven_h}）**"
                     added_hot += 1
 
@@ -387,11 +375,11 @@ st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
-    # 追従ヘッダー（左側にメニューボタン避けるマージン確保）
+    # 追従ヘッダー（左右のボタンと絶対に被らないよう中央に寄せてマージン確保）
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
-        <div style="font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
+        <div style="font-size: 9px; font-weight: bold; color: #64748b; margin-bottom: 2px;">
             📌 【追従中】最新（前回 第693回）の当選数字
         </div>
         <div class="prev-ball-container-fixed">
@@ -463,4 +451,4 @@ if generate_btn:
                                 st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
 
     if success_count > 0:
-        st.success("🎉 生成が完了しました！左上のメニューボタンは常に最前面に固定されているため、いつでも開いて設定を変更できます。")
+        st.success("🎉 完了しました！左右のボタンやメニューも完全に独立して快適に押せるようになっています。")
