@@ -7,11 +7,11 @@ st.set_page_config(
     page_title="宝田式・ロト7 フルカスタム予想", page_icon="🎯", layout="centered"
 )
 
-# --- カスタムデザイン（追従ヘッダーの位置をさらに下へ＆サイズ拡大） ---
+# --- カスタムデザイン（詳細数字とレイアウトの微調整） ---
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,900;1,900&family=M+PLUS+Rounded+1c:wght@700;800&family=Noto+Sans+JP:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,900;1,900&family=M+PLUS+Rounded+1c:wght@700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
     .stApp {
         background-color: #f8fafc;
@@ -95,10 +95,9 @@ st.markdown(
         border: 2px solid #ffffff;
     }
     
-    /* 📌 追従ヘッダー：位置をしっかり下げ、文字やボールサイズを大きく見やすく調整 */
     .absolute-fixed-header {
         position: fixed !important;
-        top: 60px !important; /* 👈 上部のメニューボタンと絶対にかぶらない位置に下方修正 */
+        top: 60px !important;
         left: 0 !important;
         width: 100% !important;
         background-color: rgba(255, 255, 255, 0.98) !important;
@@ -120,9 +119,9 @@ st.markdown(
     .prev-ball-fixed {
         background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
         color: #1e293b;
-        font-size: 14px; /* 見やすさ重視でサイズアップ */
+        font-size: 14px;
         font-weight: bold;
-        width: 30px;    /* 大きくして見やすく調整 */
+        width: 30px;
         height: 30px;
         min-width: 30px;
         min-height: 30px;
@@ -273,8 +272,11 @@ def generate_takarada_custom(
         for a in user_axes:
             cnt_a = counts.get(a, 0)
             oddeven_a = "奇数" if a % 2 != 0 else "偶数"
-            golden_tag = " [黄金値該当]" if 4 <= cnt_a <= 6 else ""
-            reasons[a] = f"🔑 **ユーザー指定固定軸 ({oddeven_a}){golden_tag}**"
+            golden_tag = " (黄金値該当)" if 4 <= cnt_a <= 6 else ""
+            reasons[a] = {
+                "title": "ユーザー指定固定軸",
+                "sub": f"{oddeven_a}{golden_tag} / 出現{cnt_a}回",
+            }
 
         valid_hot = [n for n in hot_candidates if n not in selected]
         if valid_hot and h_range[1] > 0:
@@ -294,9 +296,15 @@ def generate_takarada_custom(
                     cnt_h = counts.get(h_num, 0)
                     oddeven_h = "奇数" if h_num % 2 != 0 else "偶数"
                     if h_num in pull_numbers:
-                        reasons[h_num] = f"🔥 **ホット数字（引っ張り・{oddeven_h}）**"
+                        reasons[h_num] = {
+                            "title": "🔥 ホット数字",
+                            "sub": f"引っ張り・{oddeven_h} / 出現{cnt_h}回",
+                        }
                     else:
-                        reasons[h_num] = f"🔥 **ホット数字（スライド・{oddeven_h}）**"
+                        reasons[h_num] = {
+                            "title": "🔥 ホット数字",
+                            "sub": f"スライド・{oddeven_h} / 出現{cnt_h}回",
+                        }
                     added_hot += 1
 
         while len(selected) < 7:
@@ -328,7 +336,10 @@ def generate_takarada_custom(
             zone_name = (
                 "低帯" if 1 <= cand <= 12 else ("中帯" if 13 <= cand <= 24 else "高帯")
             )
-            reasons[cand] = f"📦 **{zone_name}バランス枠** (出現{cnt_c}回)"
+            reasons[cand] = {
+                "title": f"📦 {zone_name}バランス枠",
+                "sub": f"出現{cnt_c}回",
+            }
 
         if len(selected) != 7:
             continue
@@ -372,7 +383,6 @@ st.markdown("---")
 generate_btn = st.button("🚀 宝田式・フルカスタム予想を生成する", type="primary")
 
 if generate_btn:
-    # 追従ヘッダー表示
     latest_draw = recent_24_draws[0]
     fixed_header_html = """
     <div class="absolute-fixed-header">
@@ -444,8 +454,18 @@ if generate_btn:
 
                         with st.expander("📖 【詳細】なぜこの7つの数字が選ばれたのか？"):
                             for num in lotto_numbers:
-                                detail_text = reasons.get(num, "個別特性枠")
-                                st.markdown(f"- **数字 `[ {num:02d} ]`**: {detail_text}")
+                                info = reasons.get(
+                                    num, {"title": "個別特性枠", "sub": ""}
+                                )
+                                # 緑の数字を大きく、説明を太字、補足を細字にするHTML形式
+                                detail_html = f"""
+                                <div style="margin-bottom: 8px; font-size: 14px;">
+                                    • 数字 <span style="color: #16a34a; font-size: 17px; font-weight: bold;">[ {num:02d} ]</span>： 
+                                    <strong style="color: #0f172a;">{info['title']}</strong> 
+                                    <span style="color: #64748b; font-size: 12px; font-weight: normal;">({info['sub']})</span>
+                                </div>
+                                """
+                                st.markdown(detail_html, unsafe_allow_html=True)
 
     if success_count > 0:
-        st.success("🎉 完了しました！上部のメニューボタンともしっかり離れ、数字や文字も大きくなって見やすくなっています。")
+        st.success("🎉 完了しました！詳細の数字が大きくなり、説明が太字、補足が細字ですっきりと見やすくなりました。")
