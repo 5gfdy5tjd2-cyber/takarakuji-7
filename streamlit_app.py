@@ -164,7 +164,6 @@ num_predictions = st.sidebar.number_input("生成する予想パターン数", m
 def generate_prediction():
     valid_nums = [n for n in range(1, max_num + 1) if n not in exclude_numbers]
     
-    # 最新当選数字から「スライド」「引っ張り」を抽出
     slide_nums = []
     for p in latest_draw:
         if p - 1 >= 1: slide_nums.append(p - 1)
@@ -179,7 +178,6 @@ def generate_prediction():
         selected = set()
         reasons = {}
 
-        # 1. ホット数字（最新結果由来）の選出
         hot_count = random.randint(hot_min, hot_max)
         available_hot = [n for n in hot_pool if n not in selected]
         random.shuffle(available_hot)
@@ -192,7 +190,6 @@ def generate_prediction():
             else:
                 reasons[n] = f"🔥 最新回の当選数字の近傍から現れた「スライド数字」（{odd_even}）"
 
-        # 2. 残りを各帯から抽出
         while len(selected) < pick_count:
             cand = random.choice([n for n in valid_nums if n not in selected])
             selected.add(cand)
@@ -207,7 +204,6 @@ def generate_prediction():
 
         lotto_list = sorted(list(selected))
 
-        # --- 各種フィルター検証 ---
         if not (sum_min <= sum(lotto_list) <= sum_max): continue
         
         c_low = sum(1 for n in lotto_list if n in low_zone)
@@ -252,7 +248,13 @@ if generate_btn:
                     b_html += "</div>"
                     st.markdown(b_html, unsafe_allow_html=True)
                     
+                    # 合計値の表示
                     st.info(f"📊 合計値: **{sum(res_nums)}**")
+                    
+                    # 🟢 奇数・偶数の個数がわかる緑色の欄を完全復活！
+                    odd_count = sum(1 for n in res_nums if n % 2 != 0)
+                    even_count = len(res_nums) - odd_count
+                    st.success(f"⚖️ 奇偶バランス: 奇数 **{odd_count}個** / 偶数 **{even_count}個**")
                     
                     with st.expander(f"📖 【詳細】なぜこの{pick_count}つの数字が選ばれたのか？"):
                         for num in res_nums:
