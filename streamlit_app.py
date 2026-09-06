@@ -159,51 +159,61 @@ num_predictions = st.sidebar.number_input("生成する予想パターン数", m
 
 
 # ==========================================
-# 🧠 予想生成エンジン
+# 🧠 予想生成エンジン（条件と理由を厳密に紐付け）
 # ==========================================
 def generate_prediction():
     valid_nums = [n for n in range(1, max_num + 1) if n not in exclude_numbers]
     
+    # スライド・引っ張り・ホット数字の定義
+    pull_nums = [n for n in latest_draw if n not in exclude_numbers]
     slide_nums = []
     for p in latest_draw:
-        if p - 1 >= 1: slide_nums.append(p - 1)
-        if p + 1 <= max_num: slide_nums.append(p + 1)
-    slide_nums = list(set([n for n in slide_nums if n not in exclude_numbers]))
-    pull_nums = [n for n in latest_draw if n not in exclude_numbers]
-    hot_pool = list(set(slide_nums + pull_nums))
+        for candidate in [p - 1, p + 1]:
+            if 1 <= candidate <= max_num and candidate not in exclude_numbers and candidate not in pull_nums:
+                slide_nums.append(candidate)
+    slide_nums = list(set(slide_nums))
+    hot_pool = list(set(pull_nums + slide_nums))
 
     attempts = 0
-    while attempts < 10000:
+    while attempts < 15000:
         attempts += 1
         selected = set()
         reasons = {}
 
+        # 1. ホット数字枠（引っ張り・スライド）の選出
         hot_count = random.randint(hot_min, hot_max)
         available_hot = [n for n in hot_pool if n not in selected]
         random.shuffle(available_hot)
         
-        for n in available_hot[:hot_count]:
+        chosen_hots = available_hot[:hot_count]
+        for n in chosen_hots:
             selected.add(n)
             odd_even = "奇数" if n % 2 != 0 else "偶数"
             if n in pull_nums:
-                reasons[n] = f"🔥 最新回の当選数字から引き継がれた「引っ張り数字」（{odd_even}）"
+                reasons[n] = f"🔥 【引っ張り数字】前回({draw_num})の当選数字から直接継続（{odd_even}）"
             else:
-                reasons[n] = f"🔥 最新回の当選数字の近傍から現れた「スライド数字」（{odd_even}）"
+                # どの数字からスライドしたかを特定
+                origin = n - 1 if (n - 1) in latest_draw else n + 1
+                reasons[n] = f"✨ 【スライド数字】前回({draw_num})の当選数字「{origin:02d}」から±1スライド（{odd_even}）"
 
+        # 2. 残りを全体プールから補充
         while len(selected) < pick_count:
             cand = random.choice([n for n in valid_nums if n not in selected])
             selected.add(cand)
+            odd_even = "奇数" if cand % 2 != 0 else "偶数"
             
-            dummy_count = random.randint(2, 10)
+            # ゾーン判定
             if cand in low_zone:
-                reasons[cand] = f"📦 低帯バランス枠（過去出現{dummy_count}回）"
+                zone_name = "低帯エリア（1〜" + str(zone_size) + "）"
             elif cand in mid_zone:
-                reasons[cand] = f"📦 中帯バランス枠（過去出現{dummy_count}回）"
+                zone_name = "中帯エリア"
             else:
-                reasons[cand] = f"📦 高帯バランス枠（過去出現{dummy_count}回）"
+                zone_name = "高帯エリア"
+            reasons[cand] = f"📦 【バランス枠】{zone_name}から選出（{odd_even}）"
 
         lotto_list = sorted(list(selected))
 
+        # --- 各種フィルター検証 ---
         if not (sum_min <= sum(lotto_list) <= sum_max): continue
         
         c_low = sum(1 for n in lotto_list if n in low_zone)
@@ -213,12 +223,34 @@ def generate_prediction():
         if not (zone_min <= c_mid <= zone_max): continue
         if not (zone_min <= c_high <= zone_max): continue
 
+        # 末尾被り（同尾数ペア）のカウントと理由付け
         tails = [n % 10 for n in lotto_list]
-        pairs_count = sum(1 for d, cnt in Counter(tails).items() if cnt >= 2)
+        tail_counts = Counter(tails)
+        pairs_count = sum(1 for d, cnt in tail_counts.items() if cnt >= 2)
         if not (tail_min <= pairs_count <= tail_max): continue
 
-        consec_count = sum(1 for i in range(len(lotto_list) - 1) if lotto_list[i+1] - lotto_list[i] == 1)
+        # 連番ペアのカウントと理由付け
+        consecutive_pairs = []
+        for i in range(len(lotto_list) - 1):
+            if lotto_list[i+1] - lotto_list[i] == 1:
+                consecutive_pairs.append((lotto_list[i], lotto_list[i+1]))
+        consec_count = len(consecutive_pairs)
         if not (consec_min <= consec_count <= consec_max): continue
+
+        # --- 理由の洗練（連番や末尾被りの要素を詳細理由に上書き反映） ---
+        for n in lotto_list:
+            extra_tags = []
+            # 連番のチェック
+            for p1, p2 in consecutive_pairs:
+                if n == p1 or n == p2:
+                    extra_tags.append(f"🔗【連番ペア形成 ({p1:02d}-{p2:02d})】")
+            # 末尾被りのチェック
+            t = n % 10
+            if tail_counts[t] >= 2:
+                extra_tags.append(f"🔢【同尾数ペア (末尾{t})】")
+            
+            if extra_tags:
+                reasons[n] += " ＋ " + " ".join(extra_tags)
 
         return lotto_list, reasons
 
@@ -251,14 +283,14 @@ if generate_btn:
                     # 合計値の表示
                     st.info(f"📊 合計値: **{sum(res_nums)}**")
                     
-                    # 🟢 奇数・偶数の個数がわかる緑色の欄を完全復活！
+                    # 🟢 奇数・偶数の個数がわかる緑色の欄
                     odd_count = sum(1 for n in res_nums if n % 2 != 0)
                     even_count = len(res_nums) - odd_count
                     st.success(f"⚖️ 奇偶バランス: 奇数 **{odd_count}個** / 偶数 **{even_count}個**")
                     
                     with st.expander(f"📖 【詳細】なぜこの{pick_count}つの数字が選ばれたのか？"):
                         for num in res_nums:
-                            reason_text = res_reasons.get(num, "")
+                            reason_text = res_reasons.get(num, "バランス枠から選出")
                             st.markdown(f"**• 数字 `[ {num:02d} ]`** : {reason_text}")
 
     if success_count == 0:
