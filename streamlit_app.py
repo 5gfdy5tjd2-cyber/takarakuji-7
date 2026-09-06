@@ -85,7 +85,7 @@ st.markdown(
 )
 
 # ==========================================
-# 📊 くじモード選択と直近の最新データベース
+# 📊 くじモード選択と最新データの正確な設定
 # ==========================================
 lotto_mode = st.radio(
     "🎪 予想したい宝くじを選択してください",
@@ -94,22 +94,22 @@ lotto_mode = st.radio(
 )
 
 if lotto_mode == "ロト7":
-    draw_num = "直近最新回"
-    latest_draw = [3, 11, 19, 22, 28, 31, 35]  # 最新トレンドを反映した基準データ
+    draw_num = "第693回"
+    latest_draw = [16, 17, 22, 23, 25, 33, 35]  # 第693回 本数字
     max_num = 37
     pick_count = 7
     default_sum = (125, 145)
     default_zone = (2, 3)
 elif lotto_mode == "ロト6":
-    draw_num = "直近最新回"
-    latest_draw = [5, 14, 21, 27, 33, 40]  # 最新トレンドを反映した基準データ
+    draw_num = "第2134回"
+    latest_draw = [5, 9, 10, 19, 26, 35]       # 第2134回 本数字
     max_num = 43
     pick_count = 6
     default_sum = (115, 150)
     default_zone = (1, 3)
 else:  # ミニロト
-    draw_num = "直近最新回"
-    latest_draw = [4, 12, 18, 23, 29]  # 最新トレンドを反映した基準データ
+    draw_num = "第1402回"
+    latest_draw = [1, 4, 20, 25, 29]          # 第1402回 本数字
     max_num = 31
     pick_count = 5
     default_sum = (65, 95)
@@ -124,7 +124,7 @@ high_zone = range(zone_size * 2 + 1, max_num + 1)
 # ==========================================
 # 📌 ヘッダー：直近の最新当選結果表示
 # ==========================================
-st.markdown(f"<div class='latest-draw-header'>📌 【最新データ連動】直近（{draw_num}）の当選数字</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='latest-draw-header'>📌 【最新データ連動】（{draw_num}）の当選数字</div>", unsafe_allow_html=True)
 balls_html = "<div class='lotto-number-container'>"
 for n in latest_draw:
     balls_html += f"<div class='lotto-ball'>{n:02d}</div>"
